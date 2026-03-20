@@ -71,7 +71,7 @@ Built fully serverless for privacy and speed:
 
 1. **Clone** the workspace:
    ```bash
-   git clone https://github.com/your-username/kafta-analogue-studio.git
+   git clone https://github.com/your-username/analogue-studio.git
    ```
 2. **Open `index.html`** on any local webserver or browser.
 
