@@ -5,7 +5,7 @@
  * @developer krafta.
  * @portfolio https://www.facebook.com/krafta.visio
  * @github https://github.com/krafta-visio
- * @version 2.0.0
+ * @version 3.0.0
  * @created 2025
  */
 
@@ -15,6 +15,8 @@ class FujiGrainApp {
         this.exifReader = new ExifReader();
         this.grainProcessor = new GrainProcessor();
         this.lutProcessor = new LUTProcessor();
+        this.halationProcessor = new HalationProcessor();
+        this.blackMistProcessor = new BlackMistProcessor();
         
         this.originalImage = null;
         this.processedCanvas = null;
@@ -26,7 +28,7 @@ class FujiGrainApp {
     }
 
     initializeApp() {
-        console.log('🚀 Initializing Fujifilm Grain Simulator...');
+        console.log('🚀 Initializing Kafta Analogue Studio...');
         this.initializeEventListeners();
         this.loadAvailableLUTs();
         this.initializeSettings();
@@ -44,7 +46,11 @@ class FujiGrainApp {
             }
         });
 
-        // Grain settings controls
+        // Grain controls
+        document.getElementById('applyGrainToggle').addEventListener('change', (e) => {
+            this.updateSetting('applyGrain', e.target.checked);
+        });
+
         document.getElementById('isoSelect').addEventListener('change', (e) => {
             this.updateSetting('iso', e.target.value);
         });
@@ -77,6 +83,36 @@ class FujiGrainApp {
             this.updateSetting('applyLUT', e.target.checked);
         });
 
+        // Halation controls
+        document.getElementById('applyHalationToggle').addEventListener('change', (e) => {
+            this.updateSetting('applyHalation', e.target.checked);
+        });
+
+        document.getElementById('halationStrengthSlider').addEventListener('input', (e) => {
+            document.getElementById('halationStrengthValue').textContent = e.target.value;
+            this.updateSetting('halationStrength', parseFloat(e.target.value));
+        });
+
+        document.getElementById('halationRadiusSlider').addEventListener('input', (e) => {
+            document.getElementById('halationRadiusValue').textContent = e.target.value;
+            this.updateSetting('halationRadius', parseInt(e.target.value, 10));
+        });
+
+        // Black Mist controls
+        document.getElementById('applyBlackMistToggle').addEventListener('change', (e) => {
+            this.updateSetting('applyBlackMist', e.target.checked);
+        });
+
+        document.getElementById('blackMistIntensitySlider').addEventListener('input', (e) => {
+            document.getElementById('blackMistIntensityValue').textContent = e.target.value;
+            this.updateSetting('blackMistIntensity', parseFloat(e.target.value));
+        });
+
+        document.getElementById('blackMistRadiusSlider').addEventListener('input', (e) => {
+            document.getElementById('blackMistRadiusValue').textContent = e.target.value;
+            this.updateSetting('blackMistRadius', parseInt(e.target.value, 10));
+        });
+
         // Action buttons
         document.getElementById('applyGrainBtn').addEventListener('click', () => {
             this.applyGrain();
@@ -93,12 +129,19 @@ class FujiGrainApp {
 
     initializeSettings() {
         this.currentSettings = {
+            applyGrain: document.getElementById('applyGrainToggle').checked,
             iso: document.getElementById('isoSelect').value,
             strength: parseFloat(document.getElementById('strengthSlider').value),
             grainSize: parseFloat(document.getElementById('grainSizeSlider').value),
             selectedLUT: 'none',
-            lutStrength: 1.0,
-            applyLUT: true
+            lutStrength: parseFloat(document.getElementById('lutStrengthSlider').value),
+            applyLUT: document.getElementById('applyLutToggle').checked,
+            applyHalation: document.getElementById('applyHalationToggle').checked,
+            halationStrength: parseFloat(document.getElementById('halationStrengthSlider').value),
+            halationRadius: parseInt(document.getElementById('halationRadiusSlider').value, 10),
+            applyBlackMist: document.getElementById('applyBlackMistToggle').checked,
+            blackMistIntensity: parseFloat(document.getElementById('blackMistIntensitySlider').value),
+            blackMistRadius: parseInt(document.getElementById('blackMistRadiusSlider').value, 10)
         };
         console.log('⚙️ Settings initialized:', this.currentSettings);
     }
@@ -117,14 +160,11 @@ class FujiGrainApp {
 	populateLUTDropdown() {
 		const lutSelect = document.getElementById('lutSelect');
 		
-		// Create a new option set
 		const newOptions = [
-			// Static options
 			{ value: 'none', text: 'No LUT (Original Colors)', selected: true },
-			{ value: 'custom', text: 'Custom LUT...' }
+			{ value: 'custom', text: 'Custom LUT (.cube)…' }
 		];
 		
-		// Add dynamic LUTs
 		this.availableLUTs.forEach(lut => {
 			newOptions.push({
 				value: lut.id,
@@ -132,7 +172,6 @@ class FujiGrainApp {
 			});
 		});
 		
-		// Clear and rebuild dropdown
 		lutSelect.innerHTML = '';
 		newOptions.forEach(opt => {
 			const option = document.createElement('option');
@@ -147,7 +186,11 @@ class FujiGrainApp {
 
     handleLUTSelection(lutName) {
         const customUpload = document.getElementById('customLutUpload');
-        customUpload.style.display = lutName === 'custom' ? 'block' : 'none';
+        if (lutName === 'custom') {
+            customUpload.classList.remove('hidden');
+        } else {
+            customUpload.classList.add('hidden');
+        }
         this.updateSetting('selectedLUT', lutName);
     }
 
@@ -176,18 +219,14 @@ class FujiGrainApp {
             console.log('📄 Processing file:', file.name);
             this.currentFile = file;
             
-            // Validate file
             const validation = await this.validator.validateFile(file);
             console.log('✅ File validated:', validation);
             
-            // Load image
             await this.loadImage(validation.dataUrl);
             
-            // Read EXIF data
             const exifData = await this.exifReader.getExifData(file);
             console.log('📊 EXIF data:', exifData);
             
-            // Update UI
             this.updateFileInfo(validation, exifData);
             this.autoConfigureIso(exifData);
             
@@ -227,41 +266,42 @@ class FujiGrainApp {
         const previewContainer = document.getElementById('previewContainer');
         const emptyState = document.getElementById('emptyState');
 
-        // Clear and set new image
         originalImgElement.src = '';
         originalImgElement.src = img.src;
         
-        // Update canvas preview
         const canvas = document.getElementById('processedCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
         ctx.drawImage(img, 0, 0);
         
-        // Update UI state
-        previewContainer.classList.remove('d-none');
-        emptyState.classList.add('d-none');
+        // Show preview, hide empty state (Tailwind classes)
+        previewContainer.classList.remove('hidden');
+        emptyState.classList.add('hidden');
 
         // Update image stats
         document.getElementById('imageStats').textContent = 
-            `Dimensions: ${img.naturalWidth} × ${img.naturalHeight} pixels | Aspect Ratio: ${(img.naturalWidth / img.naturalHeight).toFixed(2)}`;
+            `${img.naturalWidth} × ${img.naturalHeight}px`;
+
+        // Reset viewer to fit image after a short delay (DOM needs to settle)
+        requestAnimationFrame(() => {
+            if (typeof viewerReset === 'function') viewerReset();
+        });
     }
 
     updateFileInfo(validation, exifData) {
         const fileInfo = this.validator.getFileInfo(validation.file, validation);
         
-        // Update file info
         document.getElementById('fileDetails').textContent = 
-            `Name: ${fileInfo.name} | Size: ${fileInfo.size} | Dimensions: ${fileInfo.dimensions}`;
-        document.getElementById('fileInfo').classList.remove('d-none');
+            `${fileInfo.name} · ${fileInfo.size} · ${fileInfo.dimensions}`;
+        document.getElementById('fileInfo').classList.remove('hidden');
 
-        // Update EXIF info
         if (exifData) {
             document.getElementById('exifDetails').textContent = 
                 this.exifReader.formatExifDisplay(exifData);
-            document.getElementById('exifInfo').classList.remove('d-none');
+            document.getElementById('exifInfo').classList.remove('hidden');
         } else {
-            document.getElementById('exifInfo').classList.add('d-none');
+            document.getElementById('exifInfo').classList.add('hidden');
         }
     }
 
@@ -286,37 +326,54 @@ class FujiGrainApp {
             return;
         }
 
-        // 🚀 PRIORITAS: Tampilkan loading screen DULU
         this.showLoading(true);
         this.enableControls(false);
-        document.getElementById('processedCanvas').classList.add('grain-loading');
 
-        // ⏳ Beri browser waktu untuk render loading screen
         await new Promise(resolve => setTimeout(resolve, 50));
 
         try {
             console.log('🎯 Starting image processing with settings:', this.currentSettings);
             
-            // Step 1: Apply grain
-            const canvas = await this.grainProcessor.applyGrainOptimized(
-                this.originalImage, 
-                this.currentSettings
-            );
+            // Step 1: Apply grain (if enabled)
+            let canvas;
+            if (this.currentSettings.applyGrain) {
+                canvas = await this.grainProcessor.applyGrain(
+                    this.originalImage, 
+                    this.currentSettings
+                );
+            } else {
+                // No grain — just copy original to canvas
+                canvas = document.createElement('canvas');
+                canvas.width = this.originalImage.naturalWidth;
+                canvas.height = this.originalImage.naturalHeight;
+                canvas.getContext('2d').drawImage(this.originalImage, 0, 0);
+            }
 
-            // Step 2: Apply LUT if enabled
+            // Step 2: Apply Black Mist (if enabled)
+            if (this.currentSettings.applyBlackMist) {
+                console.log('☁️ Applying Black Mist filter...');
+                this.blackMistProcessor.applyBlackMist(canvas, this.currentSettings);
+            }
+
+            // Step 3: Apply halation (if enabled)
+            if (this.currentSettings.applyHalation) {
+                console.log('🌟 Applying film halation...');
+                this.halationProcessor.applyHalation(canvas, this.currentSettings);
+            }
+
+            // Step 4: Apply LUT (if enabled)
             if (this.currentSettings.applyLUT && 
                 this.currentSettings.selectedLUT && 
                 this.currentSettings.selectedLUT !== 'none') {
-                
                 await this.applyLUTToCanvas(canvas);
             }
 
-            // Step 3: Update result
+            // Step 5: Update result
             this.processedCanvas = canvas;
             this.displayProcessedImage();
             
             console.log('✅ Image processing completed successfully');
-            this.showSuccess('Grain and color grading applied successfully!');
+            this.showSuccess('Film simulation applied!');
             
         } catch (error) {
             console.error('❌ Error processing image:', error);
@@ -325,7 +382,6 @@ class FujiGrainApp {
         } finally {
             this.showLoading(false);
             this.enableControls(true);
-            document.getElementById('processedCanvas').classList.remove('grain-loading');
         }
     }
 
@@ -351,7 +407,7 @@ class FujiGrainApp {
             
         } catch (lutError) {
             console.error('❌ LUT processing failed:', lutError);
-            this.showError('LUT processing failed: ' + lutError.message + '. Continuing without color grading.');
+            this.showError('LUT processing failed: ' + lutError.message);
         }
     }
 
@@ -386,17 +442,22 @@ class FujiGrainApp {
             this.displayOriginalImage(this.originalImage);
             this.processedCanvas = null;
             
-            // Reset UI controls
             this.resetUIControls();
             
-            // Reset settings
             this.currentSettings = {
+                applyGrain: true,
                 iso: '800',
                 strength: 0.7,
                 grainSize: 1.0,
                 selectedLUT: 'none',
                 lutStrength: 1.0,
-                applyLUT: true
+                applyLUT: false,
+                applyHalation: false,
+                halationStrength: 0.50,
+                halationRadius: 20,
+                applyBlackMist: false,
+                blackMistIntensity: 0.50,
+                blackMistRadius: 25
             };
             
             console.log('🔄 Image and settings reset to original');
@@ -404,24 +465,45 @@ class FujiGrainApp {
     }
 
 	resetUIControls() {
-		// Reset LUT controls - set to "none" instead of rebuilding
-		document.getElementById('lutSelect').value = 'none';
-		document.getElementById('customLutUpload').style.display = 'none';
-		document.getElementById('lutStrengthSlider').value = 1.0;
-		document.getElementById('lutStrengthValue').textContent = '1.0';
-		document.getElementById('applyLutToggle').checked = true;
-		
 		// Reset grain controls
+		document.getElementById('applyGrainToggle').checked = true;
 		document.getElementById('isoSelect').value = '800';
 		document.getElementById('strengthSlider').value = 0.7;
 		document.getElementById('strengthValue').textContent = '0.7';
 		document.getElementById('grainSizeSlider').value = 1.0;
 		document.getElementById('grainSizeValue').textContent = '1.0';
+
+		// Reset LUT controls
+		document.getElementById('applyLutToggle').checked = false;
+		document.getElementById('lutSelect').value = 'none';
+		document.getElementById('customLutUpload').classList.add('hidden');
+		document.getElementById('lutStrengthSlider').value = 1.0;
+		document.getElementById('lutStrengthValue').textContent = '1.0';
+
+		// Reset halation controls
+		document.getElementById('applyHalationToggle').checked = false;
+		document.getElementById('halationStrengthSlider').value = 0.50;
+		document.getElementById('halationStrengthValue').textContent = '0.50';
+		document.getElementById('halationRadiusSlider').value = 20;
+		document.getElementById('halationRadiusValue').textContent = '20';
+
+		// Reset black mist controls
+		document.getElementById('applyBlackMistToggle').checked = false;
+		document.getElementById('blackMistIntensitySlider').value = 0.50;
+		document.getElementById('blackMistIntensityValue').textContent = '0.50';
+		document.getElementById('blackMistRadiusSlider').value = 25;
+		document.getElementById('blackMistRadiusValue').textContent = '25';
+
+		// Re-sync accordion panels with new toggle states
+		document.getElementById('grainSettingsPanel').classList.remove('hidden');
+		document.getElementById('lutSettingsPanel').classList.add('hidden');
+		document.getElementById('halationSettingsPanel').classList.add('hidden');
+		document.getElementById('blackMistSettingsPanel').classList.add('hidden');
 	}
 
     downloadResult() {
         if (!this.processedCanvas) {
-            this.showError('No processed image to download. Please apply grain first.');
+            this.showError('No processed image to download. Apply film simulation first.');
             return;
         }
 
@@ -444,31 +526,26 @@ class FujiGrainApp {
     enableControls(enabled) {
         const controls = [
             'applyGrainBtn', 'resetBtn', 'downloadBtn', 
-            'isoSelect', 'strengthSlider', 'grainSizeSlider',
-            'lutSelect', 'lutStrengthSlider', 'applyLutToggle', 'lutFileInput'
+            'applyGrainToggle', 'isoSelect', 'strengthSlider', 'grainSizeSlider',
+            'lutSelect', 'lutStrengthSlider', 'applyLutToggle', 'lutFileInput',
+            'applyHalationToggle', 'halationStrengthSlider', 'halationRadiusSlider',
+            'applyBlackMistToggle', 'blackMistIntensitySlider', 'blackMistRadiusSlider'
         ];
         
         controls.forEach(controlId => {
             const element = document.getElementById(controlId);
             if (element) {
                 element.disabled = !enabled;
-                
-                // Update apply button appearance
-                if (controlId === 'applyGrainBtn') {
-                    if (enabled) {
-                        element.innerHTML = '<i class="fas fa-magic me-2"></i>Apply Grain & LUT';
-                        element.classList.remove('btn-secondary');
-                        element.classList.add('btn-primary');
-                    } else {
-                        element.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
-                        element.classList.remove('btn-primary');
-                        element.classList.add('btn-secondary');
-                    }
-                }
             }
         });
         
-        // Update download button state
+        // Apply button text update
+        const applyBtn = document.getElementById('applyGrainBtn');
+        if (applyBtn) {
+            applyBtn.textContent = enabled ? 'Apply Film Simulation' : 'Processing…';
+        }
+
+        // Download only when there's a result
         const downloadBtn = document.getElementById('downloadBtn');
         if (downloadBtn) {
             downloadBtn.disabled = !(enabled && this.processedCanvas);
@@ -482,78 +559,43 @@ class FujiGrainApp {
     }
 
     showLoading(show) {
-        const spinner = document.getElementById('loadingSpinner');
         const overlay = document.getElementById('loadingOverlay');
-        
+        if (!overlay) return;
+
         if (show) {
-            // Prioritaskan tampilan loading screen
-            spinner.classList.remove('d-none');
-            if (!overlay) {
-                const newOverlay = document.createElement('div');
-                newOverlay.id = 'loadingOverlay';
-                newOverlay.className = 'position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none';
-                newOverlay.style.zIndex = '9998';
-                document.body.appendChild(newOverlay);
-            }
-            // Force synchronous rendering
-            document.getElementById('loadingOverlay').classList.remove('d-none');
+            overlay.classList.remove('hidden');
             document.body.style.cursor = 'wait';
-            
         } else {
-            spinner.classList.add('d-none');
-            if (overlay) {
-                overlay.classList.add('d-none');
-            }
-            document.body.style.cursor = 'default';
+            overlay.classList.add('hidden');
+            document.body.style.cursor = '';
         }
     }
 
     showError(message) {
         console.error('❌ App Error:', message);
-        
-        // Use Bootstrap toast for better UX
-        const toast = document.createElement('div');
-        toast.className = 'toast align-items-center text-white bg-danger border-0 position-fixed top-0 end-0 m-3';
-        toast.style.zIndex = '9999';
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas fa-exclamation-triangle me-2"></i>${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
-        
-        document.body.appendChild(toast);
-        new bootstrap.Toast(toast, { delay: 5000 }).show();
-        
-        // Auto remove after hide
-        toast.addEventListener('hidden.bs.toast', () => {
-            toast.remove();
-        });
+        this._showToast(message, '#dc2626');
     }
     
     showSuccess(message) {
         console.log('✅ Success:', message);
-        
+        this._showToast(message, '#16a34a');
+    }
+
+    _showToast(message, bgColor) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
         const toast = document.createElement('div');
-        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
-        toast.style.zIndex = '9999';
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas fa-check-circle me-2"></i>${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
-        
-        document.body.appendChild(toast);
-        new bootstrap.Toast(toast, { delay: 3000 }).show();
-        
-        toast.addEventListener('hidden.bs.toast', () => {
-            toast.remove();
-        });
+        toast.className = 'film-toast pointer-events-auto px-4 py-2.5 rounded-lg text-white text-sm shadow-xl';
+        toast.style.background = bgColor;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.transition = 'opacity .2s';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 220);
+        }, 3000);
     }
 }
 

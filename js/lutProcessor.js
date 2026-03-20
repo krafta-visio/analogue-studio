@@ -1,525 +1,509 @@
 /**
  * Fujifilm Grain Simulator - LUT Processing Module
- * 
- * @description Dynamic LUT processor with auto-discovery and optimized performance
+ *
+ * @description High-performance 3D LUT processor.
+ *              Storage: flat Float32Array (interleaved RGB) — eliminates 300 k+ object
+ *              allocations per LUT that the previous array-of-objects design produced.
+ *              Trilinear interpolation is fully inlined — zero object allocation per pixel.
+ *              LRU cache eviction keeps at most MAX_LOADED_LUTS in memory simultaneously.
  * @developer krafta.
  * @portfolio https://www.facebook.com/krafta.visio
  * @github https://github.com/krafta-visio
- * @version 2.0.0
+ * @version 3.0.0
  * @created 2025
  */
 
 class LUTProcessor {
     constructor() {
-        this.lutCache = new Map();
-        this.lutSize = 64;
-        this.lutManifest = null;
+        /**
+         * Cache entry shape:
+         * {
+         *   data:        Float32Array | null,   // flat interleaved [r0,g0,b0, r1,g1,b1 …]
+         *   size:        number,                // LUT_3D_SIZE (e.g. 33 or 64)
+         *   metadata:    Object,
+         *   lastAccessed: number,               // Date.now() — used for LRU eviction
+         * }
+         */
+        this.lutCache      = new Map();
+        this.lutManifest   = null;
         this.isInitialized = false;
-        this.initPromise = null;
+        this.initPromise   = null;
+
+        // LRU eviction: never hold more than this many LUT data buffers in memory
+        this.MAX_LOADED_LUTS = 3;
     }
 
-    /**
-     * Initialize LUT system (singleton pattern)
-     */
+    // ─────────────────────────────────────────────────────────────────────────
+    // INITIALISATION
+    // ─────────────────────────────────────────────────────────────────────────
+
     async initialize() {
-        if (this.isInitialized) {
-            console.log('🎨 LUT system already initialized');
-            return;
-        }
-
-        if (this.initPromise) {
-            return this.initPromise;
-        }
-
+        if (this.isInitialized) return;
+        if (this.initPromise)   return this.initPromise;
         this.initPromise = this._initializeInternal();
         return this.initPromise;
     }
 
     async _initializeInternal() {
-        console.log('🚀 Initializing dynamic LUT system...');
-        
+        console.log('🚀 Initializing LUT system...');
         try {
-            // Try to load manifest first
             await this.loadLUTManifest();
-        } catch (error) {
+        } catch {
             console.warn('📋 Manifest not found, scanning folder...');
             await this.scanLUTsFolder();
         }
-        
         this.isInitialized = true;
-        console.log('✅ LUT system ready -', this.lutCache.size, 'LUTs available');
+        console.log(`✅ LUT system ready — ${this.lutCache.size} LUTs registered`);
     }
 
-    /**
-     * Load LUT manifest for better organization
-     */
+    // ─────────────────────────────────────────────────────────────────────────
+    // DISCOVERY
+    // ─────────────────────────────────────────────────────────────────────────
+
     async loadLUTManifest() {
-        try {
-            const response = await fetch('luts/manifest.json');
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            this.lutManifest = await response.json();
-            console.log('📄 LUT manifest loaded:', this.lutManifest);
-            
-            // Initialize cache from manifest
-            this.lutManifest.luts.forEach(lut => {
-                this.lutCache.set(lut.id, {
-                    data: null,
-                    metadata: lut,
-                    lastAccessed: Date.now()
-                });
+        const response = await fetch('luts/manifest.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        this.lutManifest = await response.json();
+        this.lutManifest.luts.forEach(lut => {
+            this.lutCache.set(lut.id, {
+                data: null, size: 0, metadata: lut, lastAccessed: 0,
             });
-            
-        } catch (error) {
-            console.log('❌ No manifest found:', error.message);
-            throw error;
-        }
+        });
+        console.log(`📄 Manifest loaded — ${this.lutManifest.luts.length} LUTs registered`);
     }
 
-    /**
-     * Scan LUTs folder for automatic discovery
-     */
     async scanLUTsFolder() {
-        console.log('🔍 Scanning LUTs folder...');
-        
-        const discoveredLUTs = new Set();
+        const discovered = new Set();
 
-        // Method 1: Try directory listing
         try {
             const response = await fetch('luts/');
             if (response.ok) {
                 const html = await response.text();
-                const lutFiles = this.parseDirectoryListing(html);
-                lutFiles.forEach(file => discoveredLUTs.add(file.replace('.cube', '')));
+                this._parseDirectoryListing(html)
+                    .forEach(f => discovered.add(f.replace('.cube', '')));
             }
-        } catch (error) {
-            console.log('📁 Directory listing not available');
+        } catch { /* directory listing not available */ }
+
+        if (discovered.size === 0) {
+            await this._scanCommonLUTs(discovered);
         }
 
-        // Method 2: Try common LUT names
-        if (discoveredLUTs.size === 0) {
-            await this.scanCommonLUTs(discoveredLUTs);
-        }
-
-        // Initialize cache with discovered LUTs
-        discoveredLUTs.forEach(lutId => {
-            this.lutCache.set(lutId, {
-                data: null,
-                metadata: { id: lutId, name: this.formatLUTName(lutId) },
-                lastAccessed: Date.now()
+        discovered.forEach(id => {
+            this.lutCache.set(id, {
+                data: null, size: 0,
+                metadata: { id, name: this._formatLUTName(id) },
+                lastAccessed: 0,
             });
         });
-
-        console.log('📋 Discovered LUTs:', Array.from(discoveredLUTs));
+        console.log(`📋 Discovered ${discovered.size} LUTs via folder scan`);
     }
 
-    /**
-     * Scan for common LUT files
-     */
-    async scanCommonLUTs(discoveredLUTs) {
-        const commonLUTs = [
+    async _scanCommonLUTs(set) {
+        const names = [
             'Agfa_Optima_100', 'Agfa_Optima_200', 'Agfa_Portrait_160',
             'Fuji_Astia_100F', 'Fuji_Pro_400h', 'Fuji_Provia_100F',
             'Kodak_Portra_400', 'Kodak_Ektar_100', 'Kodak_Ultramax_400',
             'Fuji_Superia_200', 'Fuji_Superia_400', 'Fuji_Superia_800',
-            'Kodak_Gold_200', 'Kodak_Gold_400', 'Ilford_HP5_400'
+            'Kodak_Gold_200', 'Kodak_Gold_400', 'Ilford_HP5_400',
         ];
-
-        const checkPromises = commonLUTs.map(async (lutName) => {
+        await Promise.allSettled(names.map(async name => {
             try {
-                const response = await fetch(`luts/${lutName}.cube`, { method: 'HEAD' });
-                if (response.ok) {
-                    discoveredLUTs.add(lutName);
-                }
-            } catch (error) {
-                // Silently skip missing files
-            }
-        });
-
-        await Promise.allSettled(checkPromises);
+                const r = await fetch(`luts/${name}.cube`, { method: 'HEAD' });
+                if (r.ok) set.add(name);
+            } catch { /* skip */ }
+        }));
     }
 
-    /**
-     * Parse HTML directory listing
-     */
-    parseDirectoryListing(html) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const links = doc.querySelectorAll('a[href$=".cube"]');
-        
-        return Array.from(links)
-            .map(link => link.getAttribute('href'))
-            .filter(filename => filename && filename.endsWith('.cube'));
+    _parseDirectoryListing(html) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return Array.from(doc.querySelectorAll('a[href$=".cube"]'))
+            .map(a => a.getAttribute('href'))
+            .filter(Boolean);
     }
 
-    /**
-     * Get list of available LUTs for UI
-     */
+    // ─────────────────────────────────────────────────────────────────────────
+    // PUBLIC API
+    // ─────────────────────────────────────────────────────────────────────────
+
     async getAvailableLUTs() {
-        if (!this.isInitialized) {
-            await this.initialize();
-        }
-
-        const availableLUTs = [];
-        
-        for (const [lutId, lutInfo] of this.lutCache) {
-            availableLUTs.push({
-                id: lutId,
-                name: lutInfo.metadata?.name || this.formatLUTName(lutId),
-                displayName: this.formatDisplayName(lutId),
-                loaded: lutInfo.data !== null,
-                category: lutInfo.metadata?.category || 'film'
+        if (!this.isInitialized) await this.initialize();
+        const list = [];
+        for (const [id, info] of this.lutCache) {
+            list.push({
+                id,
+                name:        info.metadata?.name        || this._formatLUTName(id),
+                displayName: this._formatDisplayName(id),
+                loaded:      info.data !== null,
+                category:    info.metadata?.category    || 'film',
             });
         }
-
-        // Sort by name for better UX
-        availableLUTs.sort((a, b) => a.name.localeCompare(b.name));
-        
-        return availableLUTs;
+        return list.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     /**
-     * Format LUT ID to readable name
+     * Primary method — applies a named LUT to a raw ImageData at the given strength.
+     * Lazy-loads the LUT file on first use; subsequent calls use the cached buffer.
+     *
+     * @param {ImageData} imageData
+     * @param {string}    lutName
+     * @param {number}    strength  [0 … 1]
+     * @returns {Promise<ImageData>}
      */
-    formatLUTName(lutId) {
-        return lutId
-            .replace(/_/g, ' ')
-            .replace(/\b\w/g, l => l.toUpperCase())
-            .replace(/(\d+)$/, ' $1');
-    }
+    async applyLUT(imageData, lutName, strength = 1.0) {
+        if (!this.isInitialized) await this.initialize();
+        if (lutName === 'none' || strength === 0 || !imageData) return imageData;
 
-    /**
-     * Format display name with type indicator
-     */
-    formatDisplayName(lutId) {
-        const baseName = this.formatLUTName(lutId);
-        
-        // Smart type detection
-        let type = '(color)';
-        const lowerId = lutId.toLowerCase();
-        
-        if (lowerId.includes('acros') || lowerId.includes('hp5') || lowerId.includes('mono') ||
-            lowerId.includes('tmax') || lowerId.includes('ilford')) {
-            type = '(B&W)';
-        } else if (lowerId.includes('cinema') || lowerId.includes('eterna')) {
-            type = '(cinematic)';
-        } else if (lowerId.includes('vivid') || lowerId.includes('velvia')) {
-            type = '(vibrant)';
-        } else if (lowerId.includes('portrait') || lowerId.includes('portra')) {
-            type = '(portrait)';
+        let info = this.lutCache.get(lutName);
+        if (!info) {
+            console.warn(`LUT not found in registry: ${lutName}`);
+            return imageData;
         }
-        
-        return `${baseName} ${type}`;
+
+        // Lazy load
+        if (!info.data) {
+            try {
+                await this.loadExternalLUT(lutName);
+                info = this.lutCache.get(lutName);
+            } catch (err) {
+                console.warn(`Failed to load LUT ${lutName}:`, err.message);
+                return imageData;
+            }
+        }
+
+        info.lastAccessed = Date.now();
+        return this._applyLUTTransformation(imageData, info.data, info.size, strength);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // LOADING & PARSING
+    // ─────────────────────────────────────────────────────────────────────────
+
     /**
-     * Load external LUT file
+     * Fetch and parse a .cube file into memory.
+     * LRU eviction is run first so we never exceed MAX_LOADED_LUTS.
      */
     async loadExternalLUT(lutName) {
         console.log(`📥 Loading LUT: ${lutName}`);
-        
         try {
             const response = await fetch(`luts/${lutName}.cube`);
-            if (!response.ok) {
-                throw new Error(`LUT not found: ${lutName}.cube`);
-            }
-            
-            const cubeContent = await response.text();
-            const lutData = this.parseCUBEFile(cubeContent);
-            
-            // Update cache
-            if (this.lutCache.has(lutName)) {
-                const lutInfo = this.lutCache.get(lutName);
-                lutInfo.data = lutData;
-                lutInfo.lastAccessed = Date.now();
+            if (!response.ok) throw new Error(`Not found: ${lutName}.cube`);
+
+            const text    = await response.text();
+            const lutData = this._parseCUBEFile(text);
+
+            this._evictOldestIfNeeded();
+
+            const existing = this.lutCache.get(lutName);
+            if (existing) {
+                existing.data         = null;      // release old buffer → eligible for GC
+                existing.data         = lutData.buffer;
+                existing.size         = lutData.size;
+                existing.lastAccessed = Date.now();
             } else {
                 this.lutCache.set(lutName, {
-                    data: lutData,
-                    metadata: { id: lutName, name: this.formatLUTName(lutName) },
-                    lastAccessed: Date.now()
+                    data: lutData.buffer, size: lutData.size,
+                    metadata: { id: lutName, name: this._formatLUTName(lutName) },
+                    lastAccessed: Date.now(),
                 });
             }
-            
-            console.log(`✅ LUT loaded: ${lutName}`);
+
+            console.log(`✅ LUT ready: ${lutName} (${lutData.size}³ = ${lutData.count} entries)`);
             return lutData;
-            
+
         } catch (error) {
-            console.error(`❌ Failed to load LUT ${lutName}:`, error);
-            
-            // Remove problematic LUT from cache
             this.lutCache.delete(lutName);
             throw error;
         }
     }
 
     /**
-     * Load custom LUT from file upload
+     * Load a user-uploaded .cube file.
+     * @param {File} file
      */
     async loadCustomLUT(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            
-            reader.onload = (e) => {
+            reader.onload = e => {
                 try {
-                    const lutData = this.parseCUBEFile(e.target.result);
-                    
+                    const lutData = this._parseCUBEFile(e.target.result);
+                    this._evictOldestIfNeeded();
+
+                    const existing = this.lutCache.get('custom');
+                    if (existing) existing.data = null;   // release previous custom LUT
+
                     this.lutCache.set('custom', {
-                        data: lutData,
-                        metadata: { 
-                            id: 'custom', 
-                            name: 'Custom LUT',
-                            description: `Uploaded: ${file.name}`
+                        data: lutData.buffer, size: lutData.size,
+                        metadata: {
+                            id: 'custom', name: 'Custom LUT',
+                            description: `Uploaded: ${file.name}`,
                         },
-                        lastAccessed: Date.now()
+                        lastAccessed: Date.now(),
                     });
-                    
-                    console.log('✅ Custom LUT loaded:', file.name);
+
+                    console.log(`✅ Custom LUT loaded: ${file.name}`);
                     resolve(lutData);
-                    
-                } catch (error) {
-                    reject(new Error(`Failed to parse LUT: ${error.message}`));
+                } catch (err) {
+                    reject(new Error(`Failed to parse LUT: ${err.message}`));
                 }
             };
-            
             reader.onerror = () => reject(new Error('Failed to read file'));
             reader.readAsText(file);
         });
     }
 
     /**
-     * Parse .cube file content
+     * Parse a .cube file directly into a flat Float32Array.
+     *
+     * Previous implementation created one `{r,g,b}` object per data line.
+     * For a 64³ LUT that was 262 144 objects — significant GC pressure.
+     * This version uses a pre-allocated Float32Array (interleaved RGB):
+     *   index = (z * size² + y * size + x) * 3
+     *   R → buffer[index], G → buffer[index+1], B → buffer[index+2]
+     *
+     * @param {string} content  Raw .cube file text
+     * @returns {{ buffer: Float32Array, size: number, title: string, count: number }}
      */
-    parseCUBEFile(content) {
-        const lines = content.split('\n');
-        const lut = {
-            size: 33, // Default size
-            data: [],
-            title: 'Unknown LUT'
-        };
+    _parseCUBEFile(content) {
+        // ── Header scan (regex — fast, handles vary whitespace/CRLF) ──
+        let size  = 33;
+        let title = 'Unknown LUT';
 
-        for (const line of lines) {
-            const trimmed = line.trim();
-            
-            if (!trimmed || trimmed.startsWith('#')) continue;
+        const sizeMatch  = content.match(/LUT_3D_SIZE\s+(\d+)/);
+        const titleMatch = content.match(/TITLE\s+"?([^"\r\n]+)"?/);
+        if (sizeMatch)  size  = parseInt(sizeMatch[1], 10);
+        if (titleMatch) title = titleMatch[1].trim();
 
-            if (trimmed.startsWith('TITLE')) {
-                lut.title = trimmed.replace('TITLE', '').replace(/"/g, '').trim();
+        const expectedCount = size * size * size;
+        const buffer = new Float32Array(expectedCount * 3);
+
+        let idx = 0;
+        let lineStart = 0;
+        const len = content.length;
+
+        for (let i = 0; i <= len; i++) {
+            const ch = i === len ? 10 : content.charCodeAt(i);  // treat EOF as newline
+            if (ch === 10 || ch === 13) {                         // LF or CR
+                if (i > lineStart) {
+                    // Extract line without creating a substring when possible
+                    const line = content.slice(lineStart, i).trim();
+
+                    // Skip empty lines, comments, and keyword lines
+                    if (line.length > 0 &&
+                        line[0] !== '#' &&
+                        line[0] !== 'T' &&    // TITLE
+                        line[0] !== 'L' &&    // LUT_3D_SIZE / LUT_1D_SIZE
+                        line[0] !== 'D') {    // DOMAIN_MIN / DOMAIN_MAX
+
+                        // Split on whitespace — handles multiple spaces and tabs
+                        let v0 = 0, v1 = 0, v2 = 0, vCount = 0;
+                        let numStart = -1;
+
+                        for (let j = 0; j <= line.length; j++) {
+                            const c = j < line.length ? line.charCodeAt(j) : 32;
+                            const isSpace = c === 32 || c === 9;
+
+                            if (!isSpace && numStart < 0) {
+                                numStart = j;
+                            } else if (isSpace && numStart >= 0) {
+                                const val = parseFloat(line.slice(numStart, j));
+                                if (vCount === 0) v0 = val;
+                                else if (vCount === 1) v1 = val;
+                                else if (vCount === 2) v2 = val;
+                                vCount++;
+                                numStart = -1;
+                            }
+                        }
+
+                        if (vCount >= 3 && !isNaN(v0) && !isNaN(v1) && !isNaN(v2)) {
+                            if (idx < buffer.length) {
+                                buffer[idx++] = v0 < 0 ? 0 : v0 > 1 ? 1 : v0;
+                                buffer[idx++] = v1 < 0 ? 0 : v1 > 1 ? 1 : v1;
+                                buffer[idx++] = v2 < 0 ? 0 : v2 > 1 ? 1 : v2;
+                            }
+                        }
+                    }
+                }
+                lineStart = i + 1;
             }
-            else if (trimmed.startsWith('LUT_3D_SIZE')) {
-                lut.size = parseInt(trimmed.replace('LUT_3D_SIZE', '').trim());
+        }
+
+        const count = idx / 3;
+        if (count === 0) throw new Error('No valid LUT data found in file');
+
+        if (count !== expectedCount) {
+            console.warn(`LUT size mismatch: expected ${expectedCount}, got ${count}`);
+        }
+
+        return { buffer, size, title, count };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // TRANSFORMATION — INLINED TRILINEAR INTERPOLATION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Apply a 3D LUT transformation to ImageData using trilinear interpolation.
+     *
+     * Key optimisations vs previous version:
+     *   • LUT data is a flat Float32Array (cache-friendly, no property lookups)
+     *   • Zero object allocations inside the pixel loop (no {r,g,b} temporaries)
+     *   • Integer bit-shifts replace Math.floor() where safe
+     *   • Per-channel loop (c=0,1,2) reuses the 8 corner indices already computed
+     *
+     * @param {ImageData}    imageData
+     * @param {Float32Array} lutBuffer  flat interleaved RGB
+     * @param {number}       lutSize    LUT_3D_SIZE
+     * @param {number}       strength   blend factor [0 … 1]
+     * @returns {ImageData}
+     */
+    _applyLUTTransformation(imageData, lutBuffer, lutSize, strength) {
+        const src      = imageData.data;
+        const outData  = new Uint8ClampedArray(src);   // copy, then overwrite
+        const pixCount = src.length >> 2;
+        const maxIdx   = lutSize - 1;
+        const s2       = lutSize * lutSize;
+        const scale    = maxIdx / 255;
+
+        for (let p = 0; p < pixCount; p++) {
+            const base = p << 2;
+
+            // Map 0-255 → 0-(size-1) float
+            const rx = src[base]     * scale;
+            const gx = src[base + 1] * scale;
+            const bx = src[base + 2] * scale;
+
+            // Floor via bitwise OR (safe for values < 2³¹)
+            const r0 = rx | 0;
+            const g0 = gx | 0;
+            const b0 = bx | 0;
+
+            const r1 = r0 < maxIdx ? r0 + 1 : maxIdx;
+            const g1 = g0 < maxIdx ? g0 + 1 : maxIdx;
+            const b1 = b0 < maxIdx ? b0 + 1 : maxIdx;
+
+            const dr = rx - r0;
+            const dg = gx - g0;
+            const db = bx - b0;
+
+            // Pre-compute all 8 corner positions × 3 (one multiply saves 24 additions)
+            const i000 = (b0 * s2 + g0 * lutSize + r0) * 3;
+            const i100 = (b0 * s2 + g0 * lutSize + r1) * 3;
+            const i010 = (b0 * s2 + g1 * lutSize + r0) * 3;
+            const i110 = (b0 * s2 + g1 * lutSize + r1) * 3;
+            const i001 = (b1 * s2 + g0 * lutSize + r0) * 3;
+            const i101 = (b1 * s2 + g0 * lutSize + r1) * 3;
+            const i011 = (b1 * s2 + g1 * lutSize + r0) * 3;
+            const i111 = (b1 * s2 + g1 * lutSize + r1) * 3;
+
+            // Trilinear interpolation — one channel at a time, no temp objects
+            for (let c = 0; c < 3; c++) {
+                const c00 = lutBuffer[i000 + c] + (lutBuffer[i100 + c] - lutBuffer[i000 + c]) * dr;
+                const c01 = lutBuffer[i001 + c] + (lutBuffer[i101 + c] - lutBuffer[i001 + c]) * dr;
+                const c10 = lutBuffer[i010 + c] + (lutBuffer[i110 + c] - lutBuffer[i010 + c]) * dr;
+                const c11 = lutBuffer[i011 + c] + (lutBuffer[i111 + c] - lutBuffer[i011 + c]) * dr;
+                const c0  = c00 + (c10 - c00) * dg;
+                const c1  = c01 + (c11 - c01) * dg;
+                const mapped = (c0 + (c1 - c0) * db) * 255;
+
+                // Blend original and LUT-mapped value
+                const orig = src[base + c];
+                outData[base + c] = orig + (mapped - orig) * strength;
             }
-            else {
-                // Parse data lines
-                const values = trimmed.split(/\s+/).filter(v => v);
-                if (values.length === 3) {
-                    lut.data.push({
-                        r: Math.max(0, Math.min(1, parseFloat(values[0]))),
-                        g: Math.max(0, Math.min(1, parseFloat(values[1]))),
-                        b: Math.max(0, Math.min(1, parseFloat(values[2])))
-                    });
+            // Alpha is already copied from src — leave unchanged
+        }
+
+        return new ImageData(outData, imageData.width, imageData.height);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // LRU CACHE MANAGEMENT
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * If the number of loaded (non-null data) LUTs reaches MAX_LOADED_LUTS,
+     * null-out the data of the least recently accessed entry so the GC can
+     * reclaim that Float32Array.
+     */
+    _evictOldestIfNeeded() {
+        let loadedCount = 0;
+        let oldestId    = null;
+        let oldestTime  = Infinity;
+
+        for (const [id, info] of this.lutCache) {
+            if (info.data !== null) {
+                loadedCount++;
+                if (info.lastAccessed < oldestTime) {
+                    oldestTime = info.lastAccessed;
+                    oldestId   = id;
                 }
             }
         }
 
-        if (lut.data.length === 0) {
-            throw new Error('No valid LUT data found');
+        if (loadedCount >= this.MAX_LOADED_LUTS && oldestId !== null) {
+            const victim = this.lutCache.get(oldestId);
+            victim.data  = null;   // explicit null → Float32Array eligible for GC
+            console.log(`🧹 LRU evict: released "${oldestId}" (${this.MAX_LOADED_LUTS} LUT limit)`);
         }
-
-        // Validate LUT size
-        const expectedSize = lut.size * lut.size * lut.size;
-        if (lut.data.length !== expectedSize) {
-            console.warn(`LUT size mismatch: expected ${expectedSize}, got ${lut.data.length}`);
-        }
-
-        return lut;
     }
 
-    /**
-     * Apply LUT to ImageData (main processing method)
-     */
-    async applyLUT(imageData, lutName, strength = 1.0) {
-        if (!this.isInitialized) {
-            await this.initialize();
+    // ─────────────────────────────────────────────────────────────────────────
+    // UTILITIES
+    // ─────────────────────────────────────────────────────────────────────────
+
+    _formatLUTName(lutId) {
+        return lutId.replace(/_/g, ' ')
+                    .replace(/\b\w/g, l => l.toUpperCase())
+                    .replace(/(\d+)$/, ' $1');
+    }
+
+    _formatDisplayName(lutId) {
+        const name  = this._formatLUTName(lutId);
+        const lower = lutId.toLowerCase();
+        let type = '(color)';
+        if (lower.includes('acros') || lower.includes('hp5') ||
+            lower.includes('mono')  || lower.includes('tmax') ||
+            lower.includes('ilford')) {
+            type = '(B&W)';
+        } else if (lower.includes('cinema') || lower.includes('eterna')) {
+            type = '(cinematic)';
+        } else if (lower.includes('vivid') || lower.includes('velvia')) {
+            type = '(vibrant)';
+        } else if (lower.includes('portrait') || lower.includes('portra')) {
+            type = '(portrait)';
         }
-
-        // Early returns for no-op cases
-        if (lutName === 'none' || strength === 0 || !imageData) {
-            return imageData;
-        }
-
-        // Get or load LUT
-        let lutInfo = this.lutCache.get(lutName);
-        if (!lutInfo) {
-            console.warn(`❌ LUT not found: ${lutName}`);
-            return imageData;
-        }
-
-        let lutData = lutInfo.data;
-        if (!lutData) {
-            try {
-                lutData = await this.loadExternalLUT(lutName);
-            } catch (error) {
-                console.warn(`❌ Failed to load LUT ${lutName}:`, error);
-                return imageData;
-            }
-        }
-
-        // Update access time for cache management
-        lutInfo.lastAccessed = Date.now();
-
-        // Apply LUT transformation
-        return this.applyLUTTransformation(imageData, lutData, strength);
+        return `${name} ${type}`;
     }
 
-    /**
-     * Apply LUT transformation to ImageData
-     */
-    applyLUTTransformation(imageData, lut, strength) {
-        const newImageData = new ImageData(
-            new Uint8ClampedArray(imageData.data),
-            imageData.width,
-            imageData.height
-        );
-        
-        const data = newImageData.data;
-        const lutSize = lut.size;
-        const dataLength = data.length;
-
-        // Optimized loop for better performance
-        for (let i = 0; i < dataLength; i += 4) {
-            const r = data[i] / 255;
-            const g = data[i + 1] / 255;
-            const b = data[i + 2] / 255;
-
-            const lutColor = this.sampleLUT3D(lut, r, g, b, lutSize);
-
-            // Blend with original based on strength
-            data[i]     = this.mix(data[i],     lutColor.r * 255, strength);
-            data[i + 1] = this.mix(data[i + 1], lutColor.g * 255, strength);
-            data[i + 2] = this.mix(data[i + 2], lutColor.b * 255, strength);
-            // Alpha channel remains unchanged
-        }
-
-        return newImageData;
-    }
-
-    /**
-     * 3D LUT sampling with trilinear interpolation
-     */
-    sampleLUT3D(lut, r, g, b, size) {
-        const x = r * (size - 1);
-        const y = g * (size - 1);
-        const z = b * (size - 1);
-
-        const x0 = Math.floor(x);
-        const y0 = Math.floor(y);
-        const z0 = Math.floor(z);
-        const x1 = Math.min(x0 + 1, size - 1);
-        const y1 = Math.min(y0 + 1, size - 1);
-        const z1 = Math.min(z0 + 1, size - 1);
-
-        const dx = x - x0;
-        const dy = y - y0;
-        const dz = z - z0;
-
-        // Get the 8 corner points
-        const c000 = this.getLUTColor(lut, x0, y0, z0, size);
-        const c100 = this.getLUTColor(lut, x1, y0, z0, size);
-        const c010 = this.getLUTColor(lut, x0, y1, z0, size);
-        const c110 = this.getLUTColor(lut, x1, y1, z0, size);
-        const c001 = this.getLUTColor(lut, x0, y0, z1, size);
-        const c101 = this.getLUTColor(lut, x1, y0, z1, size);
-        const c011 = this.getLUTColor(lut, x0, y1, z1, size);
-        const c111 = this.getLUTColor(lut, x1, y1, z1, size);
-
-        // Trilinear interpolation
-        const c00 = this.mixColor(c000, c100, dx);
-        const c01 = this.mixColor(c001, c101, dx);
-        const c10 = this.mixColor(c010, c110, dx);
-        const c11 = this.mixColor(c011, c111, dx);
-
-        const c0 = this.mixColor(c00, c10, dy);
-        const c1 = this.mixColor(c01, c11, dy);
-
-        return this.mixColor(c0, c1, dz);
-    }
-
-    /**
-     * Get LUT color at specific coordinates
-     */
-    getLUTColor(lut, x, y, z, size) {
-        const index = (z * size * size) + (y * size) + x;
-        return lut.data[Math.min(index, lut.data.length - 1)];
-    }
-
-    /**
-     * Color mixing helper
-     */
-    mixColor(c1, c2, t) {
-        return {
-            r: this.mix(c1.r, c2.r, t),
-            g: this.mix(c1.g, c2.g, t),
-            b: this.mix(c1.b, c2.b, t)
-        };
-    }
-
-    /**
-     * Linear interpolation
-     */
-    mix(a, b, t) {
-        return a + (b - a) * t;
-    }
-
-    /**
-     * Preload specific LUTs for better performance
-     */
+    /** Manually preload specific LUTs (e.g. on app startup for commonly-used ones) */
     async preloadLUTs(lutNames) {
-        if (!this.isInitialized) {
-            await this.initialize();
-        }
-
-        const preloadPromises = lutNames.map(async (lutName) => {
-            if (this.lutCache.has(lutName)) {
-                const lutInfo = this.lutCache.get(lutName);
-                if (!lutInfo.data) {
-                    await this.loadExternalLUT(lutName);
-                }
-            }
-        });
-
-        await Promise.allSettled(preloadPromises);
-        console.log(`✅ Preloaded ${lutNames.length} LUTs`);
+        if (!this.isInitialized) await this.initialize();
+        await Promise.allSettled(lutNames.map(async name => {
+            const info = this.lutCache.get(name);
+            if (info && !info.data) await this.loadExternalLUT(name);
+        }));
+        console.log(`✅ Preloaded ${lutNames.length} LUT(s)`);
     }
 
-    /**
-     * Clear cache to free memory
-     */
-    clearCache(keepLoaded = true) {
+    /** Release all data buffers (full reset) or only unloaded entries. */
+    clearCache(keepLoaded = false) {
         if (!keepLoaded) {
+            for (const info of this.lutCache.values()) info.data = null;
             this.lutCache.clear();
         } else {
-            // Only clear unloaded LUTs
-            for (const [lutName, lutInfo] of this.lutCache) {
-                if (!lutInfo.data) {
-                    this.lutCache.delete(lutName);
-                }
+            for (const [id, info] of this.lutCache) {
+                if (!info.data) this.lutCache.delete(id);
             }
         }
         console.log('🧹 LUT cache cleared');
     }
 
-    /**
-     * Get cache statistics
-     */
     getCacheStats() {
-        let loaded = 0;
-        let total = 0;
-        
-        for (const [_, lutInfo] of this.lutCache) {
+        let loaded = 0, total = 0;
+        for (const info of this.lutCache.values()) {
             total++;
-            if (lutInfo.data) loaded++;
+            if (info.data) loaded++;
         }
-        
-        return { total, loaded, percentage: (loaded / total * 100).toFixed(1) };
+        return { total, loaded, percentage: total ? (loaded / total * 100).toFixed(1) : '0.0' };
     }
 }
