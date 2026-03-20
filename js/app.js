@@ -1,5 +1,5 @@
 /**
- * Fujifilm Grain Simulator - App Processing Module
+ * Kafta Analogue Studio - App Processing Module
  * 
  * @description Professional-grade film grain simulation algorithm
  * @developer krafta.
@@ -510,7 +510,7 @@ class FujiGrainApp {
         try {
             const link = document.createElement('a');
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            link.download = `fuji-grain-${timestamp}.jpg`;
+            link.download = `kafta-analogue-${timestamp}.jpg`;
             link.href = this.processedCanvas.toDataURL('image/jpeg', 0.95);
             link.click();
             
@@ -601,6 +601,6 @@ class FujiGrainApp {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🌐 DOM loaded, initializing Fujifilm Grain Simulator...');
+    console.log('🌐 DOM loaded, initializing Kafta Analogue Studio...');
     new FujiGrainApp();
 });

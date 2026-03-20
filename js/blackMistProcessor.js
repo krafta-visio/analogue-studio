@@ -1,5 +1,5 @@
 /**
- * Fujifilm Grain Simulator - Black Mist Filter Module
+ * Kafta Analogue Studio - Black Mist Filter Module
  *
  * @description Simulates the optical behaviour of Black Mist / Pro-Mist camera filters
  *              (e.g. Tiffen Black Pro-Mist, Kenko Black Mist).

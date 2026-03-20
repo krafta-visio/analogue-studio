@@ -1,5 +1,5 @@
 /**
- * Fujifilm Grain Simulator - Halation Processing Module
+ * Kafta Analogue Studio - Halation Processing Module
  *
  * @description Authentic film halation: warm orange-red glow around highlights.
  *              In real film, bright light penetrates the emulsion, reflects off the
@@ -69,7 +69,7 @@ class HalationProcessor {
         this._boxBlur(mask, w, h, scaledRadius);
 
         // ── Step 3 + 4: Warm tint + Screen blend ─────────────────────────────
-        // Fujifilm halation signature: warm orange-red.
+        // Signature halation: warm orange-red.
         //   R 1.00 · G 0.35 · B 0.08
         // Screen formula: out = src + glow − src × glow
         // (Never darkens; only adds light — physically correct.)

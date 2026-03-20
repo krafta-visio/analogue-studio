@@ -1,5 +1,5 @@
 /**
- * Fujifilm Grain Simulator — UI Module
+ * Kafta Analogue Studio — UI Module
  * Handles: accordion (effect switches), synchronized zoom/pan viewer
  */
 

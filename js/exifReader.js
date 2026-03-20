@@ -1,5 +1,5 @@
 /**
- * Fujifilm Grain Simulator - Image EXIF Reader
+ * Kafta Analogue Studio - Image EXIF Reader
  * 
  * @description Professional-grade film grain simulation algorithm
  * @developer krafta.

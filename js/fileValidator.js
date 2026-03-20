@@ -1,5 +1,5 @@
 /**
- * Fujifilm Grain Simulator - File Validator Module
+ * Kafta Analogue Studio - File Validator Module
  * 
  * @description Professional-grade film grain simulation algorithm
  * @developer krafta.

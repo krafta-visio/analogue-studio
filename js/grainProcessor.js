@@ -1,7 +1,7 @@
 /**
- * Fujifilm Grain Simulator - Grain Processing Module
+ * Kafta Analogue Studio - Grain Processing Module
  *
- * @description Professional film grain simulation — authentic Fujifilm/analog film response
+ * @description Professional film grain simulation — authentic analog film response
  *              Uses Mulberry32 PRNG + Box-Muller Gaussian distribution + multi-octave
  *              fractal noise + 3-zone luminance adaptive strength.
  *              Memory: flat Float32Array buffers, no persistent canvas (zero memory leak).
@@ -297,7 +297,7 @@ class GrainProcessor {
     /**
      * Return a grain strength multiplier based on pixel luminance.
      *
-     * Zone behaviour (matches Fujifilm film response):
+     * Zone behaviour (matches analog film response):
      *   Shadows (lum < 0.2)  → low-moderate grain (silver halide still reacts to underexposure)
      *   Midtones (lum ≈ 0.45)→ peak grain (Fuji film characteristic midtone grit)
      *   Highlights (lum > 0.8)→ very little grain (overexposed areas resolve cleanly)
@@ -338,7 +338,7 @@ class GrainProcessor {
      * size      : grain spatial scale multiplier (higher = bigger clumps)
      * contrast  : adaptive-curve sharpness & shadow-tone weight [0…1]
      *
-     * Values are tuned against reference scans of Fujifilm film stocks
+     * Values are tuned against reference scans of analog film stocks
      * (Provia 100, Superia 400, Neopan ACROS).
      *
      * @param {number} iso

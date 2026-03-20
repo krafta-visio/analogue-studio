@@ -1,5 +1,5 @@
 /**
- * Fujifilm Grain Simulator - LUT Processing Module
+ * Kafta Analogue Studio - LUT Processing Module
  *
  * @description High-performance 3D LUT processor.
  *              Storage: flat Float32Array (interleaved RGB) — eliminates 300 k+ object
