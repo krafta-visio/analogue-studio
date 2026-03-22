@@ -99,21 +99,24 @@ class LUTProcessor {
         console.log(`📋 Discovered ${discovered.size} LUTs via folder scan`);
     }
 
-    async _scanCommonLUTs(set) {
-        const names = [
-            'Agfa_Optima_100', 'Agfa_Optima_200', 'Agfa_Portrait_160',
-            'Fuji_Astia_100F', 'Fuji_Pro_400h', 'Fuji_Provia_100F',
-            'Kodak_Portra_400', 'Kodak_Ektar_100', 'Kodak_Ultramax_400',
-            'Fuji_Superia_200', 'Fuji_Superia_400', 'Fuji_Superia_800',
-            'Kodak_Gold_200', 'Kodak_Gold_400', 'Ilford_HP5_400',
-        ];
-        await Promise.allSettled(names.map(async name => {
-            try {
-                const r = await fetch(`luts/${name}.cube`, { method: 'HEAD' });
-                if (r.ok) set.add(name);
-            } catch { /* skip */ }
-        }));
-    }
+	async _scanCommonLUTs(set) {
+		try {
+			const response = await fetch('luts/luts.json');
+			if (!response.ok) throw new Error('Failed to load LUT manifest');
+			
+			const manifest = await response.json();
+			
+			await Promise.allSettled(manifest.luts.map(async lut => {
+				try {
+					const r = await fetch(`luts/${lut.filename}`, { method: 'HEAD' });
+					if (r.ok) set.add(lut.id);
+				} catch { /* skip */ }
+			}));
+		} catch (err) {
+			console.warn('_scanCommonLUTs error:', err);
+		}
+	}
+
 
     _parseDirectoryListing(html) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
