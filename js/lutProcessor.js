@@ -189,7 +189,7 @@ class LUTProcessor {
     async loadExternalLUT(lutName) {
         console.log(`📥 Loading LUT: ${lutName}`);
         try {
-            const response = await fetch(`luts/${lutName}.cube`);
+            const response = await fetch(`luts/${lutName}.CUBE`);
             if (!response.ok) throw new Error(`Not found: ${lutName}.cube`);
 
             const text    = await response.text();
