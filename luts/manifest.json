@@ -11,7 +11,7 @@
   },
   "luts": [
     {
-      "id": "AMBER_EMBER",
+      "id": "Amber Ember",
       "name": "Amber Ember",
       "filename": "Amber Ember.CUBE",
       "category": "color",
@@ -21,7 +21,7 @@
       "best_for": ["golden hour", "sunset photography", "warm lifestyle"]
     },
     {
-      "id": "ARCTIC_MOSS",
+      "id": "Arctic Moss",
       "name": "Arctic Moss",
       "filename": "Arctic Moss.CUBE",
       "category": "color",
@@ -31,7 +31,7 @@
       "best_for": ["nature", "outdoor", "forest photography"]
     },
     {
-      "id": "BLUE_VELVET",
+      "id": "Blue Velvet",
       "name": "Blue Velvet",
       "filename": "Blue Velvet.CUBE",
       "category": "color",
@@ -41,7 +41,7 @@
       "best_for": ["fashion", "editorial", "creative portraits"]
     },
     {
-      "id": "CLASSIC_NOIR_50_BW",
+      "id": "Classic Noir 50 BW",
       "name": "Classic Noir 50 BW",
       "filename": "Classic Noir 50 BW.CUBE",
       "category": "monochrome",
@@ -51,7 +51,7 @@
       "iso": "50"
     },
     {
-      "id": "DEEP_ONYX_BW",
+      "id": "Deep Onyx BW",
       "name": "Deep Onyx BW",
       "filename": "Deep Onyx BW.CUBE",
       "category": "monochrome",
@@ -60,7 +60,7 @@
       "characteristics": ["monochrome", "high-contrast", "deep-blacks", "dramatic"]
     },
     {
-      "id": "EARTHY_HERITAGE",
+      "id": "Earthy Heritage",
       "name": "Earthy Heritage",
       "filename": "Earthy Heritage.CUBE",
       "category": "color",
@@ -70,7 +70,7 @@
       "best_for": ["lifestyle", "heritage", "outdoor portraits"]
     },
     {
-      "id": "ETHEREAL_WHITE",
+      "id": "Ethereal White",
       "name": "Ethereal White",
       "filename": "Ethereal White.CUBE",
       "category": "color",
@@ -80,7 +80,7 @@
       "best_for": ["wedding", "lifestyle", "feminine photography"]
     },
     {
-      "id": "GOLDEN_CITRON",
+      "id": "Golden Citron",
       "name": "Golden Citron",
       "filename": "Golden Citron.CUBE",
       "category": "color",
@@ -90,7 +90,7 @@
       "best_for": ["lifestyle", "food photography", "summer vibes"]
     },
     {
-      "id": "HARSH_NEGATIVE_BW",
+      "id": "Harsh Negative BW",
       "name": "Harsh Negative BW",
       "filename": "Harsh Negative BW.CUBE",
       "category": "monochrome",
@@ -99,7 +99,7 @@
       "characteristics": ["monochrome", "gritty", "textured", "raw", "harsh"]
     },
     {
-      "id": "HONEY_BLOOM",
+      "id": "Honey Bloom",
       "name": "Honey Bloom",
       "filename": "Honey Bloom.CUBE",
       "category": "color",
@@ -109,7 +109,7 @@
       "best_for": ["portraits", "lifestyle", "golden hour"]
     },
     {
-      "id": "INSTANT_SNAP",
+      "id": "Instant Snap",
       "name": "Instant Snap",
       "filename": "Instant Snap.CUBE",
       "category": "color",
@@ -119,7 +119,7 @@
       "best_for": ["casual photography", "social media", "creative projects"]
     },
     {
-      "id": "MASTER_NEGATIVE",
+      "id": "Master Negative",
       "name": "Master Negative",
       "filename": "Master Negative.CUBE",
       "category": "color",
@@ -129,7 +129,7 @@
       "best_for": ["general photography", "travel", "everyday use"]
     },
     {
-      "id": "MIDNIGHT_CYAN",
+      "id": "Midnight Cyan",
       "name": "Midnight Cyan",
       "filename": "Midnight Cyan.CUBE",
       "category": "color",
@@ -139,7 +139,7 @@
       "best_for": ["night photography", "urban", "moody portraits"]
     },
     {
-      "id": "MUTED_CHARCOAL_BW",
+      "id": "Muted Charcoal BW",
       "name": "Muted Charcoal BW",
       "filename": "Muted Charcoal BW.CUBE",
       "category": "monochrome",
@@ -148,7 +148,7 @@
       "characteristics": ["monochrome", "muted", "soft-grey", "flat"]
     },
     {
-      "id": "NATURAL_SKIN_160",
+      "id": "Natural Skin 160",
       "name": "Natural Skin 160",
       "filename": "Natural Skin 160.CUBE",
       "category": "portrait",
@@ -159,7 +159,7 @@
       "best_for": ["portraits", "weddings", "studio photography"]
     },
     {
-      "id": "NEON_METROPOLIS",
+      "id": "Neon Metropolis",
       "name": "Neon Metropolis",
       "filename": "Neon Metropolis.CUBE",
       "category": "color",
@@ -169,7 +169,7 @@
       "best_for": ["street photography", "night urban", "city scenes"]
     },
     {
-      "id": "NOSTALGIC_CITY",
+      "id": "Nostalgic City",
       "name": "Nostalgic City",
       "filename": "Nostalgic City.CUBE",
       "category": "color",
@@ -179,7 +179,7 @@
       "best_for": ["street photography", "vintage looks", "urban lifestyle"]
     },
     {
-      "id": "PRECISION_SLIDE",
+      "id": "Precision Slide",
       "name": "Precision Slide",
       "filename": "Precision Slide.CUBE",
       "category": "color",
@@ -189,7 +189,7 @@
       "best_for": ["landscapes", "travel", "architecture"]
     },
     {
-      "id": "PURE_MINIMALIST",
+      "id": "Pure Minimalist",
       "name": "Pure Minimalist",
       "filename": "Pure Minimalist.CUBE",
       "category": "color",
@@ -199,7 +199,7 @@
       "best_for": ["product photography", "minimalist aesthetic", "studio"]
     },
     {
-      "id": "RICH_LOWLIGHT_800",
+      "id": "Rich Lowlight 800",
       "name": "Rich Lowlight 800",
       "filename": "Rich Lowlight 800.CUBE",
       "category": "portrait",
@@ -210,7 +210,7 @@
       "best_for": ["low light photography", "night portraits", "indoor photography"]
     },
     {
-      "id": "SILVER_NITRATE_BW",
+      "id": "Silver Nitrate BW",
       "name": "Silver Nitrate BW",
       "filename": "Silver Nitrate BW.CUBE",
       "category": "monochrome",
@@ -219,7 +219,7 @@
       "characteristics": ["monochrome", "classic", "elegant", "timeless", "silver"]
     },
     {
-      "id": "SOFT_GRAPHITE_BW",
+      "id": "Soft Graphite BW",
       "name": "Soft Graphite BW",
       "filename": "Soft Graphite BW.CUBE",
       "category": "monochrome",
@@ -228,7 +228,7 @@
       "characteristics": ["monochrome", "soft", "smooth", "gradation", "grey"]
     },
     {
-      "id": "SOFT_PASTEL_GARDEN",
+      "id": "Soft Pastel Garden",
       "name": "Soft Pastel Garden",
       "filename": "Soft Pastel Garden.CUBE",
       "category": "color",
@@ -238,7 +238,7 @@
       "best_for": ["portraits", "garden photography", "feminine aesthetic"]
     },
     {
-      "id": "SUBWAY_STEEL",
+      "id": "Subway Steel",
       "name": "Subway Steel",
       "filename": "Subway Steel.CUBE",
       "category": "color",
@@ -248,7 +248,7 @@
       "best_for": ["street photography", "urban", "architectural"]
     },
     {
-      "id": "SUMMER_GETAWAY",
+      "id": "Summer Getaway",
       "name": "Summer Getaway",
       "filename": "Summer Getaway.CUBE",
       "category": "color",
@@ -258,7 +258,7 @@
       "best_for": ["travel", "beach", "summer lifestyle"]
     },
     {
-      "id": "TERRACOTTA_GLOW",
+      "id": "Terracotta Glow",
       "name": "Terracotta Glow",
       "filename": "Terracotta Glow.CUBE",
       "category": "color",
@@ -268,7 +268,7 @@
       "best_for": ["desert landscapes", "earthy portraits", "lifestyle"]
     },
     {
-      "id": "ULTRA_SOFT_SKIN_400",
+      "id": "Ultra Soft Skin 400",
       "name": "Ultra Soft Skin 400",
       "filename": "Ultra Soft Skin 400.CUBE",
       "category": "portrait",
@@ -279,7 +279,7 @@
       "best_for": ["beauty photography", "soft portraits", "fashion"]
     },
     {
-      "id": "VINTAGE_OCHRE",
+      "id": "Vintage Ochre",
       "name": "Vintage Ochre",
       "filename": "Vintage Ochre.CUBE",
       "category": "color",
@@ -289,7 +289,7 @@
       "best_for": ["vintage looks", "retro photography", "lifestyle"]
     },
     {
-      "id": "VIVID_GRAIN",
+      "id": "Vivid Grain",
       "name": "Vivid Grain",
       "filename": "Vivid Grain.CUBE",
       "category": "color",
@@ -299,7 +299,7 @@
       "best_for": ["creative projects", "editorial", "artistic photography"]
     },
     {
-      "id": "VIVID_MARINE",
+      "id": "Vivid Marine",
       "name": "Vivid Marine",
       "filename": "Vivid Marine.CUBE",
       "category": "color",
@@ -315,18 +315,18 @@
       "count": 7,
       "description": "Black and white LUTs with various contrast and grain characteristics",
       "luts": [
-        "CLASSIC_NOIR_50_BW",
-        "DEEP_ONYX_BW",
-        "HARSH_NEGATIVE_BW",
-        "MUTED_CHARCOAL_BW",
-        "SILVER_NITRATE_BW",
-        "SOFT_GRAPHITE_BW",
-        "CLASSIC_NOIR_50_BW"
+        "Classic Noir 50 BW",
+        "Deep Onyx BW",
+        "Harsh Negative BW",
+        "Muted Charcoal BW",
+        "Silver Nitrate BW",
+        "Soft Graphite BW",
+        "Classic Noir 50 BW"
       ]
     },
     "color": {
       "name": "Color",
-      "count": 17,
+      "count": 20,
       "description": "Color LUTs ranging from warm, cool, urban, vintage to pastel and vivid looks"
     },
     "portrait": {
@@ -334,15 +334,10 @@
       "count": 3,
       "description": "LUTs optimized for skin tones and portrait photography",
       "luts": [
-        "NATURAL_SKIN_160",
-        "ULTRA_SOFT_SKIN_400",
-        "RICH_LOWLIGHT_800"
+        "Natural Skin 160",
+        "Ultra Soft Skin 400",
+        "Rich Lowlight 800"
       ]
-    },
-    "cinematic": {
-      "name": "Cinematic",
-      "count": 0,
-      "description": "Reserved for cinematic and motion picture style LUTs"
     }
   },
   "lut_types": {
