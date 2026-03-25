@@ -12,7 +12,7 @@
 class FileValidator {
     constructor() {
         this.supportedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        this.maxFileSize = 10 * 1024 * 1024; // 10MB
+        this.maxFileSize = 30 * 1024 * 1024; // 10MB
     }
 
     validateFile(file) {
