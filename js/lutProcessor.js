@@ -460,23 +460,41 @@ class LUTProcessor {
                     .replace(/(\d+)$/, ' $1');
     }
 
-    _formatDisplayName(lutId) {
-        const name  = this._formatLUTName(lutId);
-        const lower = lutId.toLowerCase();
-        let type = '(color)';
-        if (lower.includes('acros') || lower.includes('hp5') ||
-            lower.includes('mono')  || lower.includes('tmax') ||
-            lower.includes('ilford')) {
-            type = '(B&W)';
-        } else if (lower.includes('cinema') || lower.includes('eterna')) {
-            type = '(cinematic)';
-        } else if (lower.includes('vivid') || lower.includes('velvia')) {
-            type = '(vibrant)';
-        } else if (lower.includes('portrait') || lower.includes('portra')) {
-            type = '(portrait)';
-        }
-        return `${name} ${type}`;
-    }
+	_formatDisplayName(lutId, category = null) {
+		const name = this._formatLUTName(lutId);
+		let type = '(color)';
+		
+		// Use category from manifest if available
+		if (category) {
+			switch(category) {
+				case 'monochrome':
+					type = '(B&W)';
+					break;
+				case 'portrait':
+					type = '(portrait)';
+					break;
+				default:
+					type = '(color)';
+			}
+		} else {
+			// Fallback to keyword detection
+			const lower = lutId.toLowerCase();
+			if (lower.includes('bw') || lower.includes('mono') || lower.includes('black') || 
+				lower.includes('white') || lower.includes('acros') || lower.includes('hp5') ||
+				lower.includes('tmax') || lower.includes('ilford') || lower.includes('charcoal') ||
+				lower.includes('graphite') || lower.includes('nitrate') || lower.includes('silver')) {
+				type = '(B&W)';
+			} else if (lower.includes('cinema') || lower.includes('eterna')) {
+				type = '(cinematic)';
+			} else if (lower.includes('vivid') || lower.includes('velvia')) {
+				type = '(vibrant)';
+			} else if (lower.includes('portrait') || lower.includes('portra')) {
+				type = '(portrait)';
+			}
+		}
+		
+		return `${name} ${type}`;
+	}
 
     /** Manually preload specific LUTs (e.g. on app startup for commonly-used ones) */
     async preloadLUTs(lutNames) {
