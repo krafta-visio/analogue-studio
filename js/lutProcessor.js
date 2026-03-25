@@ -468,13 +468,13 @@ class LUTProcessor {
 		if (category) {
 			switch(category) {
 				case 'monochrome':
-					type = '(B&W)';
+					type = '(𝐁𝐖)';
 					break;
 				case 'portrait':
-					type = '(portrait)';
+					type = '(𝐩𝐨𝐫𝐭𝐫𝐚𝐢𝐭)';
 					break;
 				default:
-					type = '(color)';
+					type = '(𝐜𝐨𝐥𝐨𝐫)';
 			}
 		} else {
 			// Fallback to keyword detection
