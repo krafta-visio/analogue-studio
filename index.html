@@ -1,1 +1,501 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Kafta Analogue Studio — Authentic film grain, halation, black mist, and LUT color grading for your digital photos."><title>Kafta Analogue Studio</title><meta name="title" content="Kafta Analogue Studio"><meta name="keywords" content="film grain, halation, black mist, LUT, color grading, analogue, photo editing"><meta name="author" content="Kafta Analogue Studio"><meta name="robots" content="index, follow"><link rel="canonical" href="https://krafta-visio.github.io/analogue-studio/"><meta property="og:type" content="website"><meta property="og:url" content="https://krafta-visio.github.io/analogue-studio/"><meta property="og:title" content="Kafta Analogue Studio"><meta property="og:description" content="Kafta Analogue Studio — Authentic film grain, halation, black mist, and LUT color grading for your digital photos."><meta property="og:image" content="https://krafta-visio.github.io/analogue-studio/og-image.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Kafta Analogue Studio Preview"><meta property="og:site_name" content="Kafta Analogue Studio"><meta property="og:locale" content="en_US"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:url" content="https://krafta-visio.github.io/analogue-studio/"><meta name="twitter:title" content="Kafta Analogue Studio"><meta name="twitter:description" content="Kafta Analogue Studio — Authentic film grain, halation, black mist, and LUT color grading for your digital photos."><meta name="twitter:image" content="https://krafta-visio.github.io/analogue-studio/og-image.jpg"><meta name="twitter:image:alt" content="Kafta Analogue Studio Preview"><meta name="twitter:site" content="@kaftaanalogue"><meta name="twitter:creator" content="@kaftaanalogue"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="manifest" href="site.webmanifest"><meta name="theme-color" content="#ffffff"><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={theme:{extend:{colors:{film:{bg:"#0d0d0d",sidebar:"#111111",card:"#1a1a1a",border:"#272727",hover:"#222222",accent:"#d4a853",gold:"#e8c98c",text:"#d4d4d4",muted:"#666666",dim:"#404040"}},fontFamily:{sans:["Inter","system-ui","sans-serif"]},animation:{"toast-in":"toastIn .25s ease-out"},keyframes:{toastIn:{from:{opacity:0,transform:"translateY(-8px)"},to:{opacity:1,transform:"translateY(0)"}}}}}}</script><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"><link href="css/style.css" rel="stylesheet"></head><body class="bg-film-bg text-film-text font-sans h-screen flex flex-col overflow-hidden select-none"><header class="h-13 shrink-0 border-b border-film-border bg-film-sidebar flex items-center px-5 gap-4"><div class="flex items-center gap-2.5"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1" y="1" width="18" height="18" rx="3" stroke="#d4a853" stroke-width="1.5"/><circle cx="10" cy="10" r="4" stroke="#d4a853" stroke-width="1.5"/><circle cx="10" cy="10" r="1.5" fill="#d4a853"/></svg><span class="font-semibold text-white tracking-tight">kafta.</span><span class="text-film-muted text-[11px] tracking-widest uppercase hidden sm:block">Analogue Studio</span></div><div class="ml-auto flex items-center gap-2"><button id="resetBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium text-film-muted border border-film-border hover:border-film-dim hover:text-film-text transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed" disabled="disabled">Reset</button><button id="downloadBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium text-film-text border border-film-border hover:border-film-dim hover:bg-film-hover transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed" disabled="disabled"><span class="flex items-center gap-1.5"><svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 12l-4.5-4.5 1.4-1.4L7 8.2V2h2v6.2l2.1-2.1 1.4 1.4L8 12z"/><path d="M2 13h12v1.5H2V13z"/></svg>Download</span></button><button id="applyGrainBtn" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-film-accent text-black hover:bg-film-gold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-amber-900/20" disabled="disabled">Apply Film Simulation</button></div></header><div class="flex flex-1 overflow-hidden"><aside class="w-[340px] shrink-0 bg-film-sidebar border-r border-film-border overflow-y-auto flex flex-col film-scrollbar"><div class="p-4 border-b border-film-border"><label for="imageInput" class="flex flex-col items-center gap-2.5 py-6 px-4 rounded-xl border-2 border-dashed border-film-border hover:border-film-accent/50 hover:bg-film-hover/50 cursor-pointer transition-all duration-200 group"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-film-muted group-hover:text-film-accent transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg><span class="text-sm text-film-muted group-hover:text-film-text transition-colors">Drop photo or click to browse</span><span class="text-[11px] text-film-muted/60">JPG · PNG · WebP · Max 30 MB</span></label><input type="file" id="imageInput" class="hidden" accept="image/*"><div id="fileInfo" class="hidden mt-3 rounded-lg bg-film-card border border-film-border p-2.5 space-y-0.5"><p class="text-[11px] text-film-muted" id="fileDetails"></p></div><div id="exifInfo" class="hidden mt-1 rounded-lg bg-film-card border border-film-border p-2.5"><p class="text-[11px] text-film-muted leading-relaxed" id="exifDetails"></p></div></div><div class="border-b border-film-border"><div class="px-4 py-3 flex items-center gap-3"><span class="text-base">🎞</span><span class="text-sm font-medium text-white flex-1">Grain Settings</span><label class="toggle-switch"><input type="checkbox" id="applyGrainToggle" class="sr-only peer" checked="checked"><div class="toggle-track peer-checked:bg-film-accent"></div></label></div><div id="grainSettingsPanel" class="px-4 pb-4 space-y-4"><div><label class="text-[11px] text-film-muted uppercase tracking-wider block mb-2">ISO Simulation</label><select id="isoSelect" class="film-select"><option value="100">ISO 100 — Clean</option><option value="200">ISO 200</option><option value="400">ISO 400</option><option value="800" selected="selected">ISO 800</option><option value="1600">ISO 1600</option><option value="3200">ISO 3200 — Heavy Grain</option><option value="auto">Auto (EXIF)</option></select></div><div><div class="flex justify-between mb-1.5"><span class="text-xs text-film-muted">Strength</span><span class="text-xs text-film-accent font-mono" id="strengthValue">0.7</span></div><input type="range" id="strengthSlider" class="film-range" min="0.1" max="1.5" step="0.1" value="0.7"></div><div><div class="flex justify-between mb-1.5"><span class="text-xs text-film-muted">Grain Size</span><span class="text-xs text-film-accent font-mono" id="grainSizeValue">1.0</span></div><input type="range" id="grainSizeSlider" class="film-range" min="0.5" max="2.0" step="0.1" value="1.0"></div></div></div><div class="border-b border-film-border"><div class="px-4 py-3 flex items-center gap-3"><span class="text-base">🎨</span><span class="text-sm font-medium text-white flex-1">LUT Color Grading</span><label class="toggle-switch"><input type="checkbox" id="applyLutToggle" class="sr-only peer"><div class="toggle-track peer-checked:bg-film-accent"></div></label></div><div id="lutSettingsPanel" class="hidden px-4 pb-4 space-y-4"><div><label class="text-[11px] text-film-muted uppercase tracking-wider block mb-2">Film Preset</label><select id="lutSelect" class="film-select"><option value="none">No LUT (Original Colors)</option><option value="custom">Custom LUT (.cube)…</option></select></div><div id="customLutUpload" class="hidden"><label class="text-[11px] text-film-muted uppercase tracking-wider block mb-2">Upload .cube File</label><input type="file" id="lutFileInput" accept=".cube" class="block w-full text-xs text-film-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-film-card file:text-film-text hover:file:bg-film-hover file:cursor-pointer cursor-pointer"></div><div><div class="flex justify-between mb-1.5"><span class="text-xs text-film-muted">LUT Strength</span><span class="text-xs text-film-accent font-mono" id="lutStrengthValue">1.0</span></div><input type="range" id="lutStrengthSlider" class="film-range" min="0.1" max="1.0" step="0.1" value="1.0"></div></div></div><div class="border-b border-film-border"><div class="px-4 py-3 flex items-center gap-3"><span class="text-base">☁️</span><span class="text-sm font-medium text-white flex-1">Black Mist Filter</span><label class="toggle-switch"><input type="checkbox" id="applyBlackMistToggle" class="sr-only peer"><div class="toggle-track peer-checked:bg-film-accent"></div></label></div><div id="blackMistSettingsPanel" class="hidden px-4 pb-4 space-y-4"><div><div class="flex justify-between mb-1.5"><span class="text-xs text-film-muted">Intensity</span><span class="text-xs text-film-accent font-mono" id="blackMistIntensityValue">0.50</span></div><input type="range" id="blackMistIntensitySlider" class="film-range" min="0.05" max="3.0" step="0.05" value="0.50"></div><div><div class="flex justify-between mb-1.5"><span class="text-xs text-film-muted">Mist Spread</span><span class="text-xs text-film-accent font-mono" id="blackMistRadiusValue">25</span></div><input type="range" id="blackMistRadiusSlider" class="film-range" min="5" max="100" step="5" value="25"></div><p class="text-[11px] text-film-muted leading-relaxed">Neutral white glow, shadow lift &amp; soft diffusion. Simulates Tiffen Black Pro-Mist.</p></div></div><div class="border-b border-film-border"><div class="px-4 py-3 flex items-center gap-3"><span class="text-base">🌟</span><span class="text-sm font-medium text-white flex-1">Film Halation</span><label class="toggle-switch"><input type="checkbox" id="applyHalationToggle" class="sr-only peer"><div class="toggle-track peer-checked:bg-film-accent"></div></label></div><div id="halationSettingsPanel" class="hidden px-4 pb-4 space-y-4"><div><div class="flex justify-between mb-1.5"><span class="text-xs text-film-muted">Strength</span><span class="text-xs text-film-accent font-mono" id="halationStrengthValue">0.50</span></div><input type="range" id="halationStrengthSlider" class="film-range" min="0.05" max="3.0" step="0.05" value="0.50"></div><div><div class="flex justify-between mb-1.5"><span class="text-xs text-film-muted">Glow Radius</span><span class="text-xs text-film-accent font-mono" id="halationRadiusValue">20</span></div><input type="range" id="halationRadiusSlider" class="film-range" min="5" max="150" step="5" value="20"></div><p class="text-[11px] text-film-muted leading-relaxed">Warm orange-red glow around highlights — authentic Fujifilm film response.</p></div></div><div class="flex-1 min-h-6"></div></aside><main class="flex-1 flex flex-col overflow-hidden bg-film-bg"><div id="emptyState" class="flex-1 flex flex-col items-center justify-center gap-4 text-film-muted"><svg width="64" height="64" viewBox="0 0 64 64" fill="none" class="opacity-20"><rect x="4" y="4" width="56" height="56" rx="8" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="32" r="14" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="32" r="5" fill="currentColor"/><path d="M20 20 L12 12 M44 20 L52 12 M20 44 L12 52 M44 44 L52 52" stroke="currentColor" stroke-width="2"/></svg><div class="text-center"><p class="text-white/40 font-medium mb-1">No photo loaded</p><p class="text-xs text-film-muted/60">Upload a photo from the sidebar to get started</p></div></div><div id="previewContainer" class="hidden flex-1 flex flex-col overflow-hidden"><div class="flex flex-1 gap-px overflow-hidden bg-film-border"><div class="flex-1 flex flex-col bg-film-bg overflow-hidden"><div class="h-8 px-3 flex items-center gap-2 bg-film-sidebar border-b border-film-border shrink-0"><div class="w-1.5 h-1.5 rounded-full bg-film-muted/40"></div><span class="text-[11px] text-film-muted uppercase tracking-widest">Original</span></div><div id="originalPanel" class="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing select-none"><div id="originalTransform" style="position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform"><img id="originalImage" alt="Original photo" draggable="false" class="max-w-none"></div></div></div><div class="flex-1 flex flex-col bg-film-bg overflow-hidden"><div class="h-8 px-3 flex items-center gap-2 bg-film-sidebar border-b border-film-border shrink-0"><div class="w-1.5 h-1.5 rounded-full bg-film-accent/60"></div><span class="text-[11px] text-film-muted uppercase tracking-widest">Processed</span></div><div id="processedPanel" class="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing select-none"><div id="processedTransform" style="position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform"><canvas id="processedCanvas" draggable="false" class="max-w-none"></canvas></div></div></div></div><div class="h-10 shrink-0 bg-film-sidebar border-t border-film-border flex items-center px-4 gap-1"><button onclick="viewerZoomOut()" title="Zoom out" class="w-7 h-7 flex items-center justify-center rounded-md text-film-muted hover:text-white hover:bg-film-card transition-all"><svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 11.46l2.54 2.54-1 1L12 12.46A6.5 6.5 0 1 1 13 11.46zM4 6h5v1H4V6z"/></svg></button><span id="zoomLevelDisplay" class="text-[11px] text-film-muted font-mono w-10 text-center tabular-nums">100%</span><button onclick="viewerReset()" title="Fit to window" class="w-7 h-7 flex items-center justify-center rounded-md text-film-muted hover:text-white hover:bg-film-card transition-all"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M8 5v6M5 8h6"/></svg></button><button onclick="viewerZoomIn()" title="Zoom in" class="w-7 h-7 flex items-center justify-center rounded-md text-film-muted hover:text-white hover:bg-film-card transition-all"><svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 11.46l2.54 2.54-1 1L12 12.46A6.5 6.5 0 1 1 13 11.46zM6 4h1v2h2v1H7v2H6V7H4V6h2V4z"/></svg></button><span class="mx-2 text-film-border">|</span><span class="text-[11px] text-film-muted/60 font-mono" id="imageStats"></span><div class="ml-auto text-[11px] text-film-muted/40">Scroll to zoom · Drag to pan</div></div></div></main></div><div id="loadingOverlay" class="hidden fixed inset-0 bg-black/75 z-50 flex flex-col items-center justify-center gap-4 backdrop-blur-sm"><div class="relative"><div class="w-10 h-10 rounded-full border-2 border-film-border animate-spin border-t-film-accent"></div></div><div class="text-center"><p class="text-white/80 text-sm font-medium">Processing film simulation…</p><p class="text-xs text-film-muted mt-1">This may take a moment for large images</p></div></div><div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2 pointer-events-none"></div><script src="https://cdn.jsdelivr.net/npm/exif-js"></script><script src="js/exifReader.js"></script><script src="js/fileValidator.js"></script><script src="js/grainProcessor.js"></script><script src="js/lutProcessor.js"></script><script src="js/blackMistProcessor.js"></script><script src="js/halationProcessor.js"></script><script src="js/ui.js"></script><script src="js/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Kafta Analogue Studio — Authentic film grain, halation, black mist, and LUT color grading for your digital photos.">
+
+    <title>Kafta Analogue Studio</title>
+
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Kafta Analogue Studio">
+    <meta name="keywords" content="film grain, halation, black mist, LUT, color grading, analogue, photo editing">
+    <meta name="author" content="Kafta Analogue Studio">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://krafta-visio.github.io/analogue-studio/">
+
+    <!-- Open Graph / Facebook Card -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://krafta-visio.github.io/analogue-studio/">
+    <meta property="og:title" content="Kafta Analogue Studio">
+    <meta property="og:description"
+        content="Kafta Analogue Studio — Authentic film grain, halation, black mist, and LUT color grading for your digital photos.">
+    <meta property="og:image" content="https://krafta-visio.github.io/analogue-studio/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Kafta Analogue Studio Preview">
+    <meta property="og:site_name" content="Kafta Analogue Studio">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://krafta-visio.github.io/analogue-studio/">
+    <meta name="twitter:title" content="Kafta Analogue Studio">
+    <meta name="twitter:description"
+        content="Kafta Analogue Studio — Authentic film grain, halation, black mist, and LUT color grading for your digital photos.">
+    <meta name="twitter:image" content="https://krafta-visio.github.io/analogue-studio/og-image.jpg">
+    <meta name="twitter:image:alt" content="Kafta Analogue Studio Preview">
+    <meta name="twitter:site" content="@kaftaanalogue">
+    <meta name="twitter:creator" content="@kaftaanalogue">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#ffffff">
+
+
+    <!-- Tailwind CSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        film: {
+                            bg: '#0d0d0d',
+                            sidebar: '#111111',
+                            card: '#1a1a1a',
+                            border: '#272727',
+                            hover: '#222222',
+                            accent: '#d4a853',
+                            gold: '#e8c98c',
+                            text: '#d4d4d4',
+                            muted: '#666666',
+                            dim: '#404040',
+                        }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    animation: {
+                        'toast-in': 'toastIn .25s ease-out',
+                    },
+                    keyframes: {
+                        toastIn: { from: { opacity: 0, transform: 'translateY(-8px)' }, to: { opacity: 1, transform: 'translateY(0)' } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Custom styles (range slider, scrollbar, transitions) -->
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body class="bg-film-bg text-film-text font-sans h-screen flex flex-col overflow-hidden select-none">
+
+    <!-- ═══════════════════════════════════════════════════════════ TOP BAR -->
+    <header class="h-13 shrink-0 border-b border-film-border bg-film-sidebar flex items-center px-5 gap-4">
+        <div class="flex items-center gap-2.5">
+            <img src="logo.png" />
+        </div>
+
+        <div class="ml-auto flex items-center gap-2">
+            <button id="resetBtn"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium text-film-muted border border-film-border hover:border-film-dim hover:text-film-text transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled>
+                Reset
+            </button>
+            <button id="downloadBtn"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium text-film-text border border-film-border hover:border-film-dim hover:bg-film-hover transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled>
+                <span class="flex items-center gap-1.5">
+                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 12l-4.5-4.5 1.4-1.4L7 8.2V2h2v6.2l2.1-2.1 1.4 1.4L8 12z" />
+                        <path d="M2 13h12v1.5H2V13z" />
+                    </svg>
+                    Download
+                </span>
+            </button>
+            <button id="applyGrainBtn"
+                class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-film-accent text-black hover:bg-film-gold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-amber-900/20"
+                disabled>
+                Apply Film Simulation
+            </button>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════════ MAIN LAYOUT -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- ─────────────────────────────────────────────────── SIDEBAR -->
+        <aside
+            class="w-[340px] shrink-0 bg-film-sidebar border-r border-film-border overflow-y-auto flex flex-col film-scrollbar">
+
+            <!-- UPLOAD SECTION -->
+            <div class="p-4 border-b border-film-border">
+                <label for="imageInput"
+                    class="flex flex-col items-center gap-2.5 py-6 px-4 rounded-xl border-2 border-dashed border-film-border hover:border-film-accent/50 hover:bg-film-hover/50 cursor-pointer transition-all duration-200 group">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        class="text-film-muted group-hover:text-film-accent transition-colors">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                    </svg>
+                    <span class="text-sm text-film-muted group-hover:text-film-text transition-colors">Drop photo or
+                        click to browse</span>
+                    <span class="text-[11px] text-film-muted/60">JPG · PNG · WebP · Max 30 MB</span>
+                </label>
+                <input type="file" id="imageInput" class="hidden" accept="image/*">
+
+                <!-- File + EXIF info (hidden initially) -->
+                <div id="fileInfo"
+                    class="hidden mt-3 rounded-lg bg-film-card border border-film-border p-2.5 space-y-0.5">
+                    <p class="text-[11px] text-film-muted" id="fileDetails"></p>
+                </div>
+                <div id="exifInfo" class="hidden mt-1 rounded-lg bg-film-card border border-film-border p-2.5">
+                    <p class="text-[11px] text-film-muted leading-relaxed" id="exifDetails"></p>
+                </div>
+            </div>
+
+            <!-- ── GRAIN SETTINGS ─────────────────────────────── -->
+            <div class="border-b border-film-border">
+                <div class="px-4 py-3 flex items-center gap-3">
+                    <span class="text-base">🎞</span>
+                    <span class="text-sm font-medium text-white flex-1">Grain Settings</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="applyGrainToggle" class="sr-only peer" checked>
+                        <div class="toggle-track peer-checked:bg-film-accent"></div>
+                    </label>
+                </div>
+                <div id="grainSettingsPanel" class="px-4 pb-4 space-y-4">
+                    <div>
+                        <label class="text-[11px] text-film-muted uppercase tracking-wider block mb-2">ISO
+                            Simulation</label>
+                        <select id="isoSelect" class="film-select">
+                            <option value="100">ISO 100 — Clean</option>
+                            <option value="200">ISO 200</option>
+                            <option value="400">ISO 400</option>
+                            <option value="800" selected>ISO 800</option>
+                            <option value="1600">ISO 1600</option>
+                            <option value="3200">ISO 3200 — Heavy Grain</option>
+                            <option value="auto">Auto (EXIF)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Strength</span>
+                            <span class="text-xs text-film-accent font-mono" id="strengthValue">0.7</span>
+                        </div>
+                        <input type="range" id="strengthSlider" class="film-range" min="0.1" max="1.5" step="0.1"
+                            value="0.7">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Grain Size</span>
+                            <span class="text-xs text-film-accent font-mono" id="grainSizeValue">1.0</span>
+                        </div>
+                        <input type="range" id="grainSizeSlider" class="film-range" min="0.5" max="2.0" step="0.1"
+                            value="1.0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── LUT COLOR GRADING ──────────────────────────── -->
+            <div class="border-b border-film-border">
+                <div class="px-4 py-3 flex items-center gap-3">
+                    <span class="text-base">🎨</span>
+                    <span class="text-sm font-medium text-white flex-1">LUT Color Grading</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="applyLutToggle" class="sr-only peer">
+                        <div class="toggle-track peer-checked:bg-film-accent"></div>
+                    </label>
+                </div>
+                <div id="lutSettingsPanel" class="hidden px-4 pb-4 space-y-4">
+                    <div>
+                        <label class="text-[11px] text-film-muted uppercase tracking-wider block mb-2">Film
+                            Preset</label>
+                        <select id="lutSelect" class="film-select">
+                            <option value="none">No LUT (Original Colors)</option>
+                            <option value="custom">Custom LUT (.cube)…</option>
+                        </select>
+                    </div>
+                    <div id="customLutUpload" class="hidden">
+                        <label class="text-[11px] text-film-muted uppercase tracking-wider block mb-2">Upload .cube
+                            File</label>
+                        <input type="file" id="lutFileInput" accept=".cube"
+                            class="block w-full text-xs text-film-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-film-card file:text-film-text hover:file:bg-film-hover file:cursor-pointer cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">LUT Strength</span>
+                            <span class="text-xs text-film-accent font-mono" id="lutStrengthValue">1.0</span>
+                        </div>
+                        <input type="range" id="lutStrengthSlider" class="film-range" min="0.1" max="1.0" step="0.1"
+                            value="1.0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── BLACK MIST FILTER ──────────────────────────── -->
+            <div class="border-b border-film-border">
+                <div class="px-4 py-3 flex items-center gap-3">
+                    <span class="text-base">☁️</span>
+                    <span class="text-sm font-medium text-white flex-1">Black Mist Filter</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="applyBlackMistToggle" class="sr-only peer">
+                        <div class="toggle-track peer-checked:bg-film-accent"></div>
+                    </label>
+                </div>
+                <div id="blackMistSettingsPanel" class="hidden px-4 pb-4 space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Intensity</span>
+                            <span class="text-xs text-film-accent font-mono" id="blackMistIntensityValue">0.50</span>
+                        </div>
+                        <input type="range" id="blackMistIntensitySlider" class="film-range" min="0.05" max="3.0"
+                            step="0.05" value="0.50">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Mist Spread</span>
+                            <span class="text-xs text-film-accent font-mono" id="blackMistRadiusValue">25</span>
+                        </div>
+                        <input type="range" id="blackMistRadiusSlider" class="film-range" min="5" max="100" step="5"
+                            value="25">
+                    </div>
+                    <p class="text-[11px] text-film-muted leading-relaxed">Neutral white glow, shadow lift &amp; soft
+                        diffusion. Simulates Tiffen Black Pro-Mist.</p>
+                </div>
+            </div>
+
+            <!-- ── FILM HALATION ──────────────────────────────── -->
+            <div class="border-b border-film-border">
+                <div class="px-4 py-3 flex items-center gap-3">
+                    <span class="text-base">🌟</span>
+                    <span class="text-sm font-medium text-white flex-1">Film Halation</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="applyHalationToggle" class="sr-only peer">
+                        <div class="toggle-track peer-checked:bg-film-accent"></div>
+                    </label>
+                </div>
+                <div id="halationSettingsPanel" class="hidden px-4 pb-4 space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Strength</span>
+                            <span class="text-xs text-film-accent font-mono" id="halationStrengthValue">0.50</span>
+                        </div>
+                        <input type="range" id="halationStrengthSlider" class="film-range" min="0.05" max="3.0"
+                            step="0.05" value="0.50">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Glow Radius</span>
+                            <span class="text-xs text-film-accent font-mono" id="halationRadiusValue">20</span>
+                        </div>
+                        <input type="range" id="halationRadiusSlider" class="film-range" min="5" max="150" step="5"
+                            value="20">
+                    </div>
+                    <p class="text-[11px] text-film-muted leading-relaxed">Warm orange-red glow around highlights —
+                        authentic Fujifilm film response.</p>
+                </div>
+            </div>
+
+            <!-- ── VIGNETTE EFFECT ────────────────────────────── -->
+            <div class="border-b border-film-border">
+                <div class="px-4 py-3 flex items-center gap-3">
+                    <span class="text-base">🕳️</span>
+                    <span class="text-sm font-medium text-white flex-1">Vignette Effect</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="applyVignetteToggle" class="sr-only peer">
+                        <div class="toggle-track peer-checked:bg-film-accent"></div>
+                    </label>
+                </div>
+                <div id="vignetteSettingsPanel" class="hidden px-4 pb-4 space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Feather</span>
+                            <span class="text-xs text-film-accent font-mono" id="vignetteFeatherValue">50%</span>
+                        </div>
+                        <input type="range" id="vignetteFeatherSlider" class="film-range" min="0" max="100" step="1"
+                            value="50">
+                        <p class="text-[10px] text-film-muted/50 mt-1 leading-relaxed">Softness of the vignette
+                            transition edge</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Fringe <span
+                                    class="text-[10px] text-film-muted/50">(Chromatic Aberration)</span></span>
+                            <span class="text-xs text-film-accent font-mono" id="vignetteFringeValue">0%</span>
+                        </div>
+                        <input type="range" id="vignetteFringeSlider" class="film-range" min="0" max="100" step="1"
+                            value="0">
+                        <p class="text-[10px] text-film-muted/50 mt-1 leading-relaxed">Lens color-channel
+                            mis-registration (R/B lateral shift)</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Exposure</span>
+                            <span class="text-xs text-film-accent font-mono" id="vignetteExposureValue">-1.00</span>
+                        </div>
+                        <input type="range" id="vignetteExposureSlider" class="film-range" min="-2.0" max="2.0"
+                            step="0.05" value="-1.0">
+                        <p class="text-[10px] text-film-muted/50 mt-1 leading-relaxed">Negative = darken edges, Positive
+                            = brighten edges</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1.5">
+                            <span class="text-xs text-film-muted">Radius</span>
+                            <span class="text-xs text-film-accent font-mono" id="vignetteRadiusValue">50%</span>
+                        </div>
+                        <input type="range" id="vignetteRadiusSlider" class="film-range" min="0" max="100" step="1"
+                            value="50">
+                        <p class="text-[10px] text-film-muted/50 mt-1 leading-relaxed">Size of the clear centre zone</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-xs text-film-muted">Center Point (X/Y)</span>
+                            <span class="text-xs text-film-accent font-mono" id="vignetteCenterValue">50%, 50%</span>
+                        </div>
+                        <div id="vignettePad"
+                            class="w-full h-32 bg-[#1A1C1D] rounded-xl relative cursor-pointer overflow-hidden border border-film-border transition-colors hover:border-film-dim">
+                            <div class="absolute inset-x-0 top-1/2 h-px bg-film-border"></div>
+                            <div class="absolute inset-y-0 left-1/2 w-px bg-film-border"></div>
+                            <div id="vignettePadThumb"
+                                class="absolute w-[18px] h-[18px] bg-film-accent rounded-full border-2 border-[#111] shadow-[0_0_8px_rgba(212,168,83,0.5)] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-transform"
+                                style="left: 50%; top: 50%;"></div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-film-muted/50 leading-relaxed">Warm amber tone applied in the vignette
+                        shadow zone — authentic darkroom feel.</p>
+                </div>
+            </div>
+            <div class="flex-1 min-h-6"></div>
+
+        </aside>
+
+        <!-- ─────────────────────────────────────────────── CONTENT AREA -->
+        <main class="flex-1 flex flex-col overflow-hidden bg-film-bg">
+
+            <!-- EMPTY STATE -->
+            <div id="emptyState" class="flex-1 flex flex-col items-center justify-center gap-4 text-film-muted">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" class="opacity-20">
+                    <rect x="4" y="4" width="56" height="56" rx="8" stroke="currentColor" stroke-width="2" />
+                    <circle cx="32" cy="32" r="14" stroke="currentColor" stroke-width="2" />
+                    <circle cx="32" cy="32" r="5" fill="currentColor" />
+                    <path d="M20 20 L12 12 M44 20 L52 12 M20 44 L12 52 M44 44 L52 52" stroke="currentColor"
+                        stroke-width="2" />
+                </svg>
+                <div class="text-center">
+                    <p class="text-white/40 font-medium mb-1">No photo loaded</p>
+                    <p class="text-xs text-film-muted/60">Upload a photo from the sidebar to get started</p>
+                </div>
+            </div>
+
+            <!-- PREVIEW CONTAINER (hidden initially) -->
+            <div id="previewContainer" class="hidden flex-1 flex flex-col overflow-hidden">
+
+                <!-- PANEL AREA (before + after) -->
+                <div class="flex flex-1 gap-px overflow-hidden bg-film-border">
+
+                    <!-- BEFORE -->
+                    <div class="flex-1 flex flex-col bg-film-bg overflow-hidden">
+                        <div
+                            class="h-8 px-3 flex items-center gap-2 bg-film-sidebar border-b border-film-border shrink-0">
+                            <div class="w-1.5 h-1.5 rounded-full bg-film-muted/40"></div>
+                            <span class="text-[11px] text-film-muted uppercase tracking-widest">Original</span>
+                        </div>
+                        <div id="originalPanel"
+                            class="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing select-none">
+                            <div id="originalTransform"
+                                style="position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;">
+                                <img id="originalImage" alt="Original photo" draggable="false" class="max-w-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AFTER -->
+                    <div class="flex-1 flex flex-col bg-film-bg overflow-hidden">
+                        <div
+                            class="h-8 px-3 flex items-center gap-2 bg-film-sidebar border-b border-film-border shrink-0">
+                            <div class="w-1.5 h-1.5 rounded-full bg-film-accent/60"></div>
+                            <span class="text-[11px] text-film-muted uppercase tracking-widest">Processed</span>
+                        </div>
+                        <div id="processedPanel"
+                            class="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing select-none">
+                            <div id="processedTransform"
+                                style="position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;">
+                                <canvas id="processedCanvas" draggable="false" class="max-w-none"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ZOOM CONTROLS -->
+                <div class="h-10 shrink-0 bg-film-sidebar border-t border-film-border flex items-center px-4 gap-1">
+                    <button onclick="viewerZoomOut()" title="Zoom out"
+                        class="w-7 h-7 flex items-center justify-center rounded-md text-film-muted hover:text-white hover:bg-film-card transition-all">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 11.46l2.54 2.54-1 1L12 12.46A6.5 6.5 0 1 1 13 11.46zM4 6h5v1H4V6z" />
+                        </svg>
+                    </button>
+
+                    <span id="zoomLevelDisplay"
+                        class="text-[11px] text-film-muted font-mono w-10 text-center tabular-nums">100%</span>
+
+                    <button onclick="viewerReset()" title="Fit to window"
+                        class="w-7 h-7 flex items-center justify-center rounded-md text-film-muted hover:text-white hover:bg-film-card transition-all">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <rect x="2" y="2" width="12" height="12" rx="2" />
+                            <path d="M8 5v6M5 8h6" />
+                        </svg>
+                    </button>
+
+                    <button onclick="viewerZoomIn()" title="Zoom in"
+                        class="w-7 h-7 flex items-center justify-center rounded-md text-film-muted hover:text-white hover:bg-film-card transition-all">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 11.46l2.54 2.54-1 1L12 12.46A6.5 6.5 0 1 1 13 11.46zM6 4h1v2h2v1H7v2H6V7H4V6h2V4z" />
+                        </svg>
+                    </button>
+
+                    <span class="mx-2 text-film-border">|</span>
+                    <span class="text-[11px] text-film-muted/60 font-mono" id="imageStats"></span>
+
+                    <div class="ml-auto text-[11px] text-film-muted/40">Scroll to zoom · Drag to pan</div>
+                </div>
+
+            </div>
+        </main>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ LOADING OVERLAY -->
+    <div id="loadingOverlay"
+        class="hidden fixed inset-0 bg-black/75 z-50 flex flex-col items-center justify-center gap-4 backdrop-blur-sm">
+        <div class="relative">
+            <div class="w-10 h-10 rounded-full border-2 border-film-border animate-spin border-t-film-accent"></div>
+        </div>
+        <div class="text-center">
+            <p class="text-white/80 text-sm font-medium">Processing film simulation…</p>
+            <p class="text-xs text-film-muted mt-1">This may take a moment for large images</p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ TOAST CONTAINER -->
+    <div id="toastContainer"
+        class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2 pointer-events-none">
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <script src="js/exifReader.js"></script>
+    <script src="js/fileValidator.js"></script>
+    <script src="js/grainProcessor.js"></script>
+    <script src="js/lutProcessor.js"></script>
+    <script src="js/blackMistProcessor.js"></script>
+    <script src="js/halationProcessor.js"></script>
+    <script src="js/vignetteProcessor.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>

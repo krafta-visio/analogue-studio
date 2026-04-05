@@ -1,17 +1,1 @@
-/**
- * Kafta Analogue Studio - Halation Processing Module
- *
- * @description Authentic film halation: warm orange-red glow around highlights.
- *              In real film, bright light penetrates the emulsion, reflects off the
- *              anti-halation backing, and bleeds back — creating a soft warm halo.
- *
- * Pipeline: highlight mask → 2× box-blur (≈ Gaussian) → Screen blend with warm tint.
- *
- * @developer krafta.
- * @portfolio https://www.facebook.com/krafta.visio
- * @github    https://github.com/krafta-visio
- * @version   1.1.0
- * @created   2025
- */
-
 class HalationProcessor{applyHalation(a,t){var r=Math.max(t.halationStrength||.5,0),t=Math.max(5,Math.min(t.halationRadius||20,150));if(0!==r){var h=a.getContext("2d",{willReadFrequently:!0}),e=a.width,a=a.height,l=h.getImageData(0,0,e,a),o=l.data,i=e*a,n=new Float32Array(i);for(let a=0;a<i;a++){var M,m=a<<2,m=(.2126*o[m]+.7152*o[1+m]+.0722*o[2+m])/255;.55<m&&(m=1/(1-.55)*(m-.55),M=Math.max(.5,2-.4*r),n[a]=Math.pow(m,M))}t=Math.max(4,Math.round(t*Math.sqrt(Math.min(e,a)/500)));this._boxBlur(n,e,a,t),this._boxBlur(n,e,a,t);for(let a=0;a<i;a++){var x,f,s,g,u,d,v=n[a]*r;v<1e-6||(f=o[x=a<<2]/255,s=o[1+x]/255,g=o[2+x]/255,u=.35*v,d=.08*v,o[x]=255*(f+v-f*v)+.5,o[1+x]=255*(s+u-s*u)+.5,o[2+x]=255*(g+d-g*d)+.5)}h.putImageData(l,0,0)}}_boxBlur(h,e,l,o){var i=new Float32Array(h.length),n=1/(2*o+1);for(let a=0;a<l;a++){var r=a*e;let t=0;for(let a=-o;a<=o;a++)t+=h[r+Math.max(0,Math.min(a,e-1))];for(let a=0;a<e;a++)i[r+a]=t*n,t=(t-=h[r+Math.max(0,a-o)])+h[r+Math.min(a+o+1,e-1)]}for(let r=0;r<e;r++){let t=0;for(let a=-o;a<=o;a++)t+=i[Math.max(0,Math.min(a,l-1))*e+r];for(let a=0;a<l;a++)h[a*e+r]=t*n,t=(t-=i[Math.max(0,a-o)*e+r])+i[Math.min(a+o+1,l-1)*e+r]}}}

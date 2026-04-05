@@ -1,12 +1,1 @@
-/**
- * Kafta Analogue Studio - Image EXIF Reader
- * 
- * @description Professional-grade film grain simulation algorithm
- * @developer krafta.
- * @portfolio https://www.facebook.com/krafta.visio
- * @github https://github.com/krafta-visio
- * @version 1.0.0
- * @created 2025
- */
-
-class ExifReader{constructor(){this.available="undefined"!=typeof EXIF,console.log("EXIF available:",this.available)}async getExifData(e){return this.available?new Promise(t=>{EXIF.getData(e,function(){try{const a={iso:EXIF.getTag(this,"ISOSpeedRatings"),aperture:EXIF.getTag(this,"FNumber"),shutterSpeed:EXIF.getTag(this,"ExposureTime"),focalLength:EXIF.getTag(this,"FocalLength"),camera:EXIF.getTag(this,"Model"),lens:EXIF.getTag(this,"LensModel"),date:EXIF.getTag(this,"DateTimeOriginal")};Object.keys(a).forEach(e=>{void 0===a[e]&&delete a[e]}),console.log("EXIF extracted:",a),t(0<Object.keys(a).length?a:null)}catch(e){console.error("EXIF reading error:",e),t(null)}})}):(console.warn("EXIF.js not available"),null)}formatExifDisplay(e){var a;return e?(a=[],e.camera&&a.push("Camera: "+e.camera),e.iso&&a.push("ISO: "+e.iso),e.aperture&&a.push("Aperture: f/"+e.aperture),e.shutterSpeed&&a.push(`Shutter: 1/${Math.round(1/e.shutterSpeed)}s`),e.focalLength&&a.push(`Focal: ${e.focalLength}mm`),a.join(" | ")):"No EXIF data"}getRecommendedIso(e){return e&&e.iso?{100:100,200:200,400:400,800:800,1600:1600,3200:3200,6400:3200}[e=e.iso]||Math.min(3200,Math.max(100,100*Math.round(e/100))):800}}
+class ExifReader{constructor(){this.available="undefined"!=typeof EXIF,console.log("EXIF available:",this.available)}async getExifData(e){return this.available?new Promise(t=>{EXIF.getData(e,function(){try{const a={iso:EXIF.getTag(this,"ISOSpeedRatings"),aperture:EXIF.getTag(this,"FNumber"),shutterSpeed:EXIF.getTag(this,"ExposureTime"),focalLength:EXIF.getTag(this,"FocalLength"),camera:EXIF.getTag(this,"Model"),lens:EXIF.getTag(this,"LensModel"),date:EXIF.getTag(this,"DateTimeOriginal")};Object.keys(a).forEach(e=>{void 0===a[e]&&delete a[e]}),console.log("EXIF extracted:",a),t(0<Object.keys(a).length?a:null)}catch(e){console.error("EXIF reading error:",e),t(null)}})}):(console.warn("EXIF.js not available"),null)}formatExifDisplay(e){var a;return e?(a=[],e.camera&&a.push("Kamera: "+e.camera),e.iso&&a.push("ISO: "+e.iso),e.aperture&&a.push("Aperture: f/"+e.aperture),e.shutterSpeed&&a.push(`Shutter: 1/${Math.round(1/e.shutterSpeed)}s`),e.focalLength&&a.push(`Focal: ${e.focalLength}mm`),a.join(" | ")):"Tidak ada data EXIF"}getRecommendedIso(e){return e&&e.iso?{100:100,200:200,400:400,800:800,1600:1600,3200:3200,6400:3200}[e=e.iso]||Math.min(3200,Math.max(100,100*Math.round(e/100))):800}}
